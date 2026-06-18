@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  free
+  pro
+}
+
+enum FileStatus {
+  pending
+  ready
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  plan         Plan     @default(free)
+  createdAt    DateTime @default(now())
+
+  files File[]
+}
+
+model File {
+  id          String     @id @default(uuid())
+  userId      String
+  name        String
+  storagePath String     @unique
+  size        Int // bytes
+  mimeType    String
+  status      FileStatus @default(pending)
+  createdAt   DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes tuned for the list/filter/search queries (PR 3).
+  @@index([userId, createdAt]) // recent / oldest
+  @@index([userId, size]) // largest / smallest
+  @@index([userId, name]) // filename search
+}

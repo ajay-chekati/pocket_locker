@@ -1,0 +1,45 @@
+/*
+ * Intentionally minimal. The real Tesla-style design (spacing, dark mode,
+ * animations) is applied in the design pass. This is just enough to keep the
+ * bare UI usable.
+ */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #ffffff;
+  color: #111111;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.app-main {
+  flex: 1;
+  padding: 16px;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.app-bottom-nav {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  padding: 12px;
+  border-top: 1px solid #eee;
+}

@@ -1,0 +1,36 @@
+/**
+ * Typed application error. Handlers throw these and the central error
+ * middleware turns them into consistent JSON responses.
+ */
+export class AppError extends Error {
+  constructor(
+    public statusCode: number,
+    public code: string,
+    message: string,
+    public details?: unknown,
+  ) {
+    super(message);
+    this.name = "AppError";
+  }
+}
+
+export const badRequest = (message: string, details?: unknown) =>
+  new AppError(400, "BAD_REQUEST", message, details);
+
+export const unauthorized = (message = "Unauthorized") =>
+  new AppError(401, "UNAUTHORIZED", message);
+
+export const forbidden = (message = "Forbidden") =>
+  new AppError(403, "FORBIDDEN", message);
+
+export const notFound = (message = "Not found") =>
+  new AppError(404, "NOT_FOUND", message);
+
+export const conflict = (message: string) =>
+  new AppError(409, "CONFLICT", message);
+
+export const payloadTooLarge = (message: string, details?: unknown) =>
+  new AppError(413, "PAYLOAD_TOO_LARGE", message, details);
+
+export const quotaExceeded = (message: string, details?: unknown) =>
+  new AppError(422, "QUOTA_EXCEEDED", message, details);
