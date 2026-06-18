@@ -4,6 +4,8 @@ import { pinoHttp } from "pino-http";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { healthRouter } from "./routes/health.js";
+import { authRouter } from "./modules/auth/auth.routes.js";
+import { apiLimiter } from "./middleware/rateLimit.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 /** Build the Express app. Kept separate from server.ts so tests can import it. */
@@ -15,7 +17,11 @@ export function createApp() {
   app.use(express.json());
 
   app.use(healthRouter);
-  // Feature routers (auth, files, ...) are mounted here in later PRs.
+
+  // General rate limit on the API surface; auth routes add a stricter limiter.
+  app.use(apiLimiter);
+  app.use(authRouter);
+  // Further feature routers (files, ...) are mounted here in later PRs.
 
   app.use(notFoundHandler);
   app.use(errorHandler);
