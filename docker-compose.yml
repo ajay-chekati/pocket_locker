@@ -23,6 +23,7 @@ services:
       NODE_ENV: production
       PORT: 4000
       DATABASE_URL: postgresql://postgres:postgres@db:5432/pocket_locker?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@db:5432/pocket_locker?schema=public
       JWT_SECRET: ${JWT_SECRET:-change-me-in-prod}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       SUPABASE_URL: ${SUPABASE_URL}

@@ -26,8 +26,12 @@ shared/     Zod DTO schemas + constants (npm workspace)
 
 Prereqs: Node 20+, Docker, and a Supabase project (for file storage).
 
+Each app has its own env file (backend secrets are kept out of the public
+frontend bundle):
+
 ```bash
-cp .env.example .env          # fill in SUPABASE_* values
+cp backend/.env.example backend/.env     # DB + JWT + Supabase secrets
+cp frontend/.env.example frontend/.env   # VITE_API_URL only
 npm install                   # installs all workspaces
 npm run build:shared          # compile the shared package
 
@@ -43,16 +47,24 @@ docker compose up --build     # backend + db (frontend stays on host via `npm ru
 
 ## Environment
 
-See [.env.example](.env.example). Key values:
+Two env files, one per app: [backend/.env.example](backend/.env.example)
+(secrets) and [frontend/.env.example](frontend/.env.example) (public).
 
-| Var                    | Purpose                                            |
-| ---------------------- | -------------------------------------------------- |
-| `DATABASE_URL`         | Postgres connection (local Docker or Supabase)     |
-| `JWT_SECRET`           | Signs auth tokens                                  |
-| `SUPABASE_URL`         | Supabase project URL                               |
-| `SUPABASE_SERVICE_KEY` | Service-role key — used server-side to sign URLs   |
-| `SUPABASE_BUCKET`      | Storage bucket name (default `files`)              |
-| `CORS_ORIGIN`          | Allowed frontend origin                            |
+**Backend** — `DATABASE_URL` and `SUPABASE_*` are unrelated: Prisma uses the DB
+URL; the Supabase keys are for the Storage API (signed URLs), not the database.
+
+| Var                    | Purpose                                                       |
+| ---------------------- | ------------------------------------------------------------ |
+| `DATABASE_URL`         | Postgres connection used at runtime (Supabase: pooled, 6543) |
+| `DIRECT_URL`           | Direct Postgres connection for `prisma migrate` (5432)       |
+| `JWT_SECRET`           | Signs auth tokens                                            |
+| `SUPABASE_URL`         | Supabase Storage/API base URL (not the DB)                  |
+| `SUPABASE_SERVICE_KEY` | Service-role key — used server-side to sign storage URLs    |
+| `SUPABASE_BUCKET`      | Storage bucket name (default `files`)                       |
+| `CORS_ORIGIN`          | Allowed frontend origin                                      |
+
+**Frontend** — `VITE_API_URL` only (anything Vite reads is shipped to the browser,
+so no secrets here).
 
 ## Testing
 

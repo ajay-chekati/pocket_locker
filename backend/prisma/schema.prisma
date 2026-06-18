@@ -4,7 +4,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // url = pooled connection (PgBouncer) used by the app at runtime.
   url      = env("DATABASE_URL")
+  // directUrl = direct connection used by `prisma migrate` (can't run through
+  // the pooler). For local dev without a pooler, set it to the same value.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Plan {
