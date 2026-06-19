@@ -3,25 +3,38 @@ import { useNavigate } from "react-router-dom";
 import { AppShell } from "../components/AppShell.js";
 import { Equalizer } from "../components/Equalizer.js";
 import { useToast } from "../components/ToastProvider.js";
+import { ApiRequestError } from "../lib/apiClient.js";
+import { proApi } from "../features/pro/proApi.js";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 /**
  * "Coming soon" Pro page with a waitlist sign-up. The Pro plan has no backend
- * yet, so the waitlist is purely client-side (matches the design prototype).
+ * yet; signups are persisted via `POST /waitlist` (idempotent on email).
  */
 export function ProPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [joined, setJoined] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const notify = () => {
+  const notify = async () => {
     if (!EMAIL_RE.test(email)) {
       showToast("Enter a valid email");
       return;
     }
-    setJoined(true);
+    setSubmitting(true);
+    try {
+      await proApi.joinWaitlist({ email });
+      setJoined(true);
+    } catch (err) {
+      showToast(
+        err instanceof ApiRequestError ? err.error.message : "Something went wrong",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -57,7 +70,7 @@ export function ProPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              notify();
+              void notify();
             }}
             style={{ display: "flex", gap: 10, justifyContent: "center", maxWidth: 420, margin: "0 auto", flexWrap: "wrap" }}
           >
@@ -69,8 +82,8 @@ export function ProPage() {
               className="pl-input"
               style={{ flex: 1, minWidth: 200, height: 50, padding: "0 16px", borderRadius: 11, fontSize: 15 }}
             />
-            <button type="submit" className="pl-btn-primary" style={{ height: 50, padding: "0 24px", borderRadius: 11, fontSize: 15 }}>
-              Notify me
+            <button type="submit" disabled={submitting} className="pl-btn-primary" style={{ height: 50, padding: "0 24px", borderRadius: 11, fontSize: 15 }}>
+              {submitting ? "Joining…" : "Notify me"}
             </button>
           </form>
         )}
