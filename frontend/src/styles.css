@@ -1,45 +1,327 @@
 /*
- * Intentionally minimal. The real Tesla-style design (spacing, dark mode,
- * animations) is applied in the design pass. This is just enough to keep the
- * bare UI usable.
+ * Pocket Locker design system.
+ *
+ * Ported from the Claude Design handoff. Component layout lives in inline styles
+ * (close to the original markup, easy to eyeball against the design); anything
+ * that needs a pseudo-state (:hover/:focus/:active) or a media query lives here
+ * as a class, since React inline styles can't express those.
+ *
+ * Colors are CSS variables keyed off [data-theme] on <html>, so dark mode is a
+ * single attribute flip (see ThemeProvider).
  */
+
+:root {
+  --accent: #e31837;
+}
+
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #ffffff;
-  color: #111111;
 }
 
-.app-shell {
+html {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: "Manrope", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font-family: "Manrope", sans-serif;
+}
+
+input::placeholder {
+  color: var(--muted);
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-elev: #fafafa;
+  --surface: #f4f4f5;
+  --text: #0a0a0b;
+  --text-2: #52525b;
+  --muted: #9a9aa3;
+  --border: #e8e8ea;
+  --shadow: rgba(17, 17, 20, 0.06);
+  --overlay: rgba(18, 18, 22, 0.45);
+  --accent-soft: rgba(227, 24, 55, 0.1);
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0b;
+  --bg-elev: #141417;
+  --surface: #1b1b1f;
+  --text: #f4f4f5;
+  --text-2: #b4b4bd;
+  --muted: #76767f;
+  --border: #2a2a30;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --overlay: rgba(0, 0, 0, 0.65);
+  --accent-soft: rgba(227, 24, 55, 0.15);
+}
+
+/* The root app wrapper transitions smoothly when the theme flips. */
+.pl-root {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  transition:
+    background 0.4s ease,
+    color 0.4s ease;
 }
 
-.app-header {
+/* ---- Animations ---- */
+@keyframes plEq {
+  0%,
+  100% {
+    transform: scaleY(0.28);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes plUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes plPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes plFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes plToast {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+@keyframes plShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.pl-anim-up {
+  animation: plUp 0.5s ease both;
+}
+.pl-anim-pop {
+  animation: plPop 0.4s ease both;
+}
+
+/* ---- Reusable controls ---- */
+
+/* Solid accent button (primary CTAs). */
+.pl-btn-primary {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-family: "Manrope", sans-serif;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    filter 0.15s;
+}
+.pl-btn-primary:hover {
+  filter: brightness(1.08);
+}
+.pl-btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* Outlined / ghost button. */
+.pl-btn-ghost {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  font-family: "Manrope", sans-serif;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+.pl-btn-ghost:hover {
+  border-color: var(--accent);
+}
+
+/* Small square icon button (theme toggle etc.). */
+.pl-icon-btn {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #eee;
-}
-
-.app-main {
-  flex: 1;
-  padding: 16px;
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
-}
-
-.app-bottom-nav {
-  display: flex;
-  gap: 16px;
   justify-content: center;
-  padding: 12px;
-  border-top: 1px solid #eee;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.pl-icon-btn:hover {
+  border-color: var(--accent);
+}
+
+/* Text inputs — accent border on focus. */
+.pl-input {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: "Manrope", sans-serif;
+}
+.pl-input:focus {
+  border-color: var(--accent);
+}
+/* Error variant keeps the accent border even when not focused. */
+.pl-input-error {
+  border-color: var(--accent);
+}
+
+/* Reset for buttons we style fully inline (logo, nav links, plain links). */
+.pl-bare {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: "Manrope", sans-serif;
+  padding: 0;
+}
+
+.pl-link-muted {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: "Manrope", sans-serif;
+  color: var(--text-2);
+  transition: color 0.15s;
+}
+.pl-link-muted:hover {
+  color: var(--accent);
+}
+
+/* Recent-upload card — lift + accent border on hover. */
+.pl-file-card {
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+.pl-file-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* File list row — surface tint on hover. */
+.pl-file-row {
+  transition: background 0.15s;
+}
+.pl-file-row:hover {
+  background: var(--surface);
+}
+
+/* Download affordance inside a row. */
+.pl-row-action {
+  transition: 0.15s;
+}
+.pl-row-action:hover {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+/* Logout button — accent on hover. */
+.pl-logout:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Modal close button. */
+.pl-modal-close:hover {
+  color: var(--text);
+}
+
+/* ---- Responsive ---- */
+.pl-bn {
+  display: none;
+}
+.pl-navlinks {
+  display: flex;
+}
+
+@media (max-width: 820px) {
+  .pl-bn {
+    display: flex;
+  }
+  .pl-navlinks {
+    display: none;
+  }
+  .pl-hidem {
+    display: none !important;
+  }
+  .pl-herog {
+    grid-template-columns: 1fr !important;
+    gap: 48px !important;
+  }
+  .pl-appwrap {
+    padding-bottom: 92px !important;
+  }
+  .pl-pad {
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+  }
+  .pl-feat {
+    grid-template-columns: 1fr !important;
+  }
+  .pl-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .pl-storage {
+    padding: 0 11px !important;
+    gap: 0 !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .pl-logout-label {
+    display: none;
+  }
 }

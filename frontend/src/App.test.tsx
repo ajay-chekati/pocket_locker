@@ -1,31 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { screen } from "@testing-library/react";
 import { App } from "./App.js";
-import { AuthProvider } from "./features/auth/AuthContext.js";
-
-function renderApp(initialEntry: string) {
-  return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </MemoryRouter>,
-  );
-}
+import { renderWithProviders } from "./test/render.js";
 
 describe("App", () => {
-  it("shows the landing page to logged-out visitors at the index route", () => {
-    renderApp("/");
+  it("shows the landing page to logged-out visitors at the index route", async () => {
+    renderWithProviders(<App />, { initialEntries: ["/"] });
     expect(
-      screen.getByRole("heading", { name: /your files, in your pocket/i }),
+      await screen.findByRole("heading", { name: /your files,\s*locked in/i }),
     ).toBeInTheDocument();
   });
 
-  it("redirects logged-out users away from protected /uploads to login", () => {
-    renderApp("/uploads");
+  it("redirects logged-out users away from protected /uploads to login", async () => {
+    renderWithProviders(<App />, { initialEntries: ["/uploads"] });
     expect(
-      screen.getByRole("heading", { name: /sign in/i }),
+      await screen.findByRole("heading", { name: /welcome back/i }),
     ).toBeInTheDocument();
   });
 });

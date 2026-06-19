@@ -2,110 +2,123 @@ import { useQuery } from "@tanstack/react-query";
 import mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import type { FileDto } from "@pocket-locker/shared";
-import { formatBytes, formatDate } from "../../lib/format.js";
+import { Modal } from "../../components/Modal.js";
+import { CloseIcon, DownloadIcon } from "../../components/icons.js";
+import { Equalizer } from "../../components/Equalizer.js";
+import { extOf, formatBytes, formatDate, kindLabel } from "../../lib/format.js";
 import { useViewUrl } from "./useFiles.js";
+import { useDownload } from "./useDownload.js";
 
 /**
- * Inline previewer. Fetches a short-lived signed URL for the file, then renders
- * it according to `previewKind`:
+ * Inline previewer in the design's modal. Fetches a short-lived signed URL for
+ * the file, then renders it by `previewKind`:
  *   image/pdf/video/audio  → native browser element pointed at the URL
  *   text                   → fetched and shown verbatim
  *   office (.docx/.xlsx)    → converted to HTML client-side (mammoth / SheetJS)
- *   none                   → metadata card + open-in-new-tab fallback
- * Rendered inside a simple modal overlay; the design pass restyles it later.
+ *   none                   → metadata card
  */
-export function FilePreview({
-  file,
-  onClose,
-}: {
-  file: FileDto;
-  onClose: () => void;
-}) {
+export function FilePreview({ file, onClose }: { file: FileDto; onClose: () => void }) {
   const { data, isLoading, isError } = useViewUrl(file.id);
+  const download = useDownload();
   const url = data?.url;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Preview of ${file.name}`}
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-        zIndex: 100,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#fff",
-          borderRadius: 8,
-          maxWidth: 900,
-          width: "100%",
-          maxHeight: "90vh",
-          overflow: "auto",
-          padding: 16,
-        }}
-      >
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "baseline",
-            gap: 16,
-          }}
-        >
-          <strong>{file.name}</strong>
-          <button type="button" onClick={onClose} aria-label="Close preview">
-            ✕
-          </button>
-        </header>
-
-        <div style={{ marginTop: 12 }}>
-          {isLoading && <p>Loading preview…</p>}
-          {isError && <p role="alert">Couldn’t load this file.</p>}
-          {url && <PreviewBody file={file} url={url} />}
-        </div>
+    <Modal onClose={onClose} maxWidth={860} padding={28} label={`Preview of ${file.name}`}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
+        <span style={{ flex: "none", padding: "5px 10px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--accent)", fontSize: 11, fontWeight: 700 }}>
+          {extOf(file.name)}
+        </span>
+        <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {file.name}
+        </span>
+        <button type="button" onClick={onClose} aria-label="Close" className="pl-modal-close" style={closeBtnStyle}>
+          <CloseIcon />
+        </button>
       </div>
-    </div>
+
+      <div>
+        {isLoading && <Centered>Loading preview…</Centered>}
+        {isError && <Centered alert>Couldn't load this file.</Centered>}
+        {url && <PreviewBody file={file} url={url} />}
+      </div>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+        <button
+          type="button"
+          onClick={() => void download(file)}
+          className="pl-btn-primary"
+          style={{ flex: 1, height: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 11, fontSize: 14.5 }}
+        >
+          <DownloadIcon />
+          Download
+        </button>
+        <button type="button" onClick={onClose} className="pl-btn-ghost" style={{ height: 48, padding: "0 22px", borderRadius: 11, fontSize: 14.5 }}>
+          Close
+        </button>
+      </div>
+    </Modal>
   );
 }
+
+const closeBtnStyle: React.CSSProperties = {
+  width: 32,
+  height: 32,
+  flex: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: "none",
+  borderRadius: 9,
+  background: "var(--surface)",
+  color: "var(--text-2)",
+  cursor: "pointer",
+};
+
+const frameStyle: React.CSSProperties = {
+  borderRadius: 12,
+  border: "1px solid var(--border)",
+  overflow: "hidden",
+  background: "var(--surface)",
+};
 
 function PreviewBody({ file, url }: { file: FileDto; url: string }) {
   switch (file.previewKind) {
     case "image":
       return (
-        <img
-          src={url}
-          alt={file.name}
-          style={{ maxWidth: "100%", height: "auto" }}
-        />
+        <div style={{ ...frameStyle, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <img src={url} alt={file.name} style={{ maxWidth: "100%", maxHeight: "70vh", height: "auto", borderRadius: 8 }} />
+        </div>
       );
     case "pdf":
-      return (
-        <iframe
-          src={url}
-          title={file.name}
-          style={{ width: "100%", height: "75vh", border: 0 }}
-        />
-      );
+      return <iframe src={url} title={file.name} style={{ ...frameStyle, width: "100%", height: "75vh", border: "1px solid var(--border)" }} />;
     case "video":
-      return <video src={url} controls style={{ maxWidth: "100%" }} />;
+      return (
+        <div style={{ ...frameStyle, background: "#0a0a0b", display: "flex", justifyContent: "center" }}>
+          <video src={url} controls style={{ maxWidth: "100%", maxHeight: "75vh" }} />
+        </div>
+      );
     case "audio":
-      return <audio src={url} controls style={{ width: "100%" }} />;
+      return (
+        <div style={{ ...frameStyle, padding: 24, background: "var(--bg-elev)" }}>
+          <audio src={url} controls style={{ width: "100%" }} />
+        </div>
+      );
     case "text":
       return <TextPreview url={url} />;
     case "office":
       return <OfficePreview url={url} mimeType={file.mimeType} />;
     default:
-      return <MetadataFallback file={file} url={url} />;
+      return <MetadataFallback file={file} />;
   }
+}
+
+function Centered({ children, alert }: { children: React.ReactNode; alert?: boolean }) {
+  return (
+    <div role={alert ? "alert" : undefined} style={{ ...frameStyle, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: 48, color: alert ? "var(--accent)" : "var(--text-2)", fontSize: 14 }}>
+      {!alert && <Equalizer bars={3} width={3} height={14} gap={3} duration={0.9} />}
+      {children}
+    </div>
+  );
 }
 
 function TextPreview({ url }: { url: string }) {
@@ -115,15 +128,21 @@ function TextPreview({ url }: { url: string }) {
     staleTime: 0,
     gcTime: 0,
   });
-  if (isLoading) return <p>Loading…</p>;
-  if (isError) return <p role="alert">Couldn’t read this file.</p>;
+  if (isLoading) return <Centered>Loading…</Centered>;
+  if (isError) return <Centered alert>Couldn't read this file.</Centered>;
   return (
     <pre
       style={{
+        ...frameStyle,
+        background: "var(--bg-elev)",
+        padding: 24,
+        margin: 0,
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
         maxHeight: "75vh",
         overflow: "auto",
+        fontSize: 13,
+        lineHeight: 1.6,
       }}
     >
       {data}
@@ -148,32 +167,48 @@ function OfficePreview({ url, mimeType }: { url: string; mimeType: string }) {
     gcTime: 0,
   });
 
-  if (isLoading) return <p>Rendering document…</p>;
-  if (isError) return <p role="alert">Couldn’t render this document.</p>;
+  if (isLoading) return <Centered>Rendering document…</Centered>;
+  if (isError) return <Centered alert>Couldn't render this document.</Centered>;
   return (
     <div
-      style={{ maxHeight: "75vh", overflow: "auto" }}
+      style={{ ...frameStyle, background: "#fff", color: "#0a0a0b", padding: 24, maxHeight: "75vh", overflow: "auto" }}
       // Content is derived from the user's own uploaded file.
       dangerouslySetInnerHTML={{ __html: data ?? "" }}
     />
   );
 }
 
-function MetadataFallback({ file, url }: { file: FileDto; url: string }) {
+function MetadataFallback({ file }: { file: FileDto }) {
+  const rows: Array<[string, string]> = [
+    ["Name", file.name],
+    ["Type", kindLabel(file.previewKind)],
+    ["Size", formatBytes(file.size)],
+    ["Uploaded", formatDate(file.createdAt)],
+  ];
   return (
-    <div>
-      <p>This file type can’t be previewed in the browser.</p>
-      <dl>
-        <dt>Type</dt>
-        <dd>{file.mimeType}</dd>
-        <dt>Size</dt>
-        <dd>{formatBytes(file.size)}</dd>
-        <dt>Uploaded</dt>
-        <dd>{formatDate(file.createdAt)}</dd>
-      </dl>
-      <a href={url} target="_blank" rel="noreferrer">
-        Open file in a new tab
-      </a>
-    </div>
+    <>
+      <div style={{ ...frameStyle }}>
+        {rows.map(([label, value], i) => (
+          <div
+            key={label}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 16,
+              padding: "14px 18px",
+              borderBottom: i === rows.length - 1 ? "none" : "1px solid var(--border)",
+            }}
+          >
+            <span style={{ fontSize: 13, color: "var(--muted)" }}>{label}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {value}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 14, textAlign: "center" }}>
+        No inline preview available for this file type.
+      </div>
+    </>
   );
 }

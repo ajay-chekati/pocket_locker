@@ -19,3 +19,24 @@ export function formatDate(iso: string): string {
     day: "numeric",
   });
 }
+
+/** Uppercase file extension for the badge, e.g. "report.PDF" → "PDF". */
+export function extOf(name: string): string {
+  const ext = name.split(".").pop();
+  return ext && ext !== name ? ext.toUpperCase() : "FILE";
+}
+
+const KIND_LABELS: Record<string, string> = {
+  image: "Image",
+  pdf: "Document",
+  office: "Document",
+  video: "Video",
+  audio: "Audio",
+  text: "Text file",
+  none: "File",
+};
+
+/** Friendly label for a file's preview kind, shown under the filename. */
+export function kindLabel(previewKind: string): string {
+  return KIND_LABELS[previewKind] ?? "File";
+}

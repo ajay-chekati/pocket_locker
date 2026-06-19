@@ -45,3 +45,14 @@ export function useViewUrl(fileId: string, enabled = true) {
     gcTime: 0,
   });
 }
+
+/**
+ * Current storage usage (bytes used + plan quota) for the header indicator and
+ * storage modal. Shares the `["files"]` key prefix so uploads refresh it too.
+ */
+export function useUsage() {
+  return useQuery({
+    queryKey: ["files", "usage"],
+    queryFn: () => filesApi.getUsage(),
+  });
+}

@@ -3,12 +3,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { MAX_FILE_SIZE_BYTES } from "@pocket-locker/shared";
 import { UploadDropzone } from "./UploadDropzone.js";
+import { ToastProvider } from "../../components/ToastProvider.js";
 
 function renderDropzone() {
   const client = new QueryClient();
   return render(
     <QueryClientProvider client={client}>
-      <UploadDropzone />
+      <ToastProvider>
+        <UploadDropzone />
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -25,9 +28,7 @@ describe("UploadDropzone client-side validation", () => {
   it("rejects an unsupported file type before any upload", async () => {
     renderDropzone();
     selectFile(new File(["x"], "evil.exe", { type: "application/x-msdownload" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      /unsupported file type/i,
-    );
+    expect(await screen.findByRole("status")).toHaveTextContent(/unsupported file type/i);
   });
 
   it("rejects a file over the 40 MB cap before any upload", async () => {
@@ -35,6 +36,6 @@ describe("UploadDropzone client-side validation", () => {
     const big = new File(["x"], "big.png", { type: "image/png" });
     Object.defineProperty(big, "size", { value: MAX_FILE_SIZE_BYTES + 1 });
     selectFile(big);
-    expect(await screen.findByRole("alert")).toHaveTextContent(/40 MB/i);
+    expect(await screen.findByRole("status")).toHaveTextContent(/exceeds the 40 MB/i);
   });
 });

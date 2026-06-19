@@ -55,3 +55,9 @@ export type ListFilesQuery = z.infer<typeof listFilesQuerySchema>;
 export interface ViewUrlResponse {
   url: string;
 }
+
+/** Response for `GET /files/usage` — bytes used against the plan quota. */
+export interface UsageResponse {
+  used: number;
+  quota: number;
+}

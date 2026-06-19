@@ -41,8 +41,15 @@ export function useFileUpload() {
   const queryClient = useQueryClient();
   const [state, setState] = useState<UploadState>(initial);
   const startRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
 
   const reset = useCallback(() => setState(initial), []);
+
+  /** Abort an in-flight upload and return to idle. */
+  const cancel = useCallback(() => {
+    abortRef.current?.abort();
+    setState(initial);
+  }, []);
 
   const upload = useCallback(
     async (file: File): Promise<FileDto | null> => {
@@ -58,6 +65,8 @@ export function useFileUpload() {
 
       setState({ ...initial, status: "uploading", fileName: file.name });
       startRef.current = Date.now();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       try {
         const { fileId, uploadUrl } = await filesApi.createUploadUrl({
@@ -66,23 +75,30 @@ export function useFileUpload() {
           mimeType: file.type,
         });
 
-        await uploadToSignedUrl(uploadUrl, file, (loaded, total) => {
-          const progress = Math.round((loaded / total) * 100);
-          const elapsed = (Date.now() - startRef.current) / 1000;
-          const speed = elapsed > 0 ? loaded / elapsed : 0; // bytes/sec
-          const etaSeconds =
-            speed > 0 ? Math.max(0, Math.round((total - loaded) / speed)) : null;
-          setState((s) => ({ ...s, progress, etaSeconds }));
-        });
+        await uploadToSignedUrl(
+          uploadUrl,
+          file,
+          (loaded, total) => {
+            const progress = Math.round((loaded / total) * 100);
+            const elapsed = (Date.now() - startRef.current) / 1000;
+            const speed = elapsed > 0 ? loaded / elapsed : 0; // bytes/sec
+            const etaSeconds =
+              speed > 0 ? Math.max(0, Math.round((total - loaded) / speed)) : null;
+            setState((s) => ({ ...s, progress, etaSeconds }));
+          },
+          controller.signal,
+        );
 
         setState((s) => ({ ...s, status: "finalizing", progress: 100, etaSeconds: 0 }));
         const dto = await filesApi.confirmUpload(fileId);
 
         setState((s) => ({ ...s, status: "success" }));
-        // Refresh any file lists once they exist (PR 3).
+        // Refresh file lists + storage usage (shared "files" key prefix).
         void queryClient.invalidateQueries({ queryKey: ["files"] });
         return dto;
       } catch (err) {
+        // A user-initiated cancel already reset state to idle — stay quiet.
+        if (controller.signal.aborted) return null;
         const message =
           err instanceof ApiRequestError ? err.error.message : "Upload failed";
         setState((s) => ({ ...s, status: "error", error: message }));
@@ -92,5 +108,5 @@ export function useFileUpload() {
     [queryClient],
   );
 
-  return { ...state, upload, reset };
+  return { ...state, upload, reset, cancel };
 }
