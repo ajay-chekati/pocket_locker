@@ -17,3 +17,6 @@ export type Plan = keyof typeof PLAN_QUOTAS;
 /** Default page size for paginated list endpoints. */
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
+
+/** Lifetime of signed view/preview URLs, in seconds (short-lived by design). */
+export const SIGNED_URL_TTL_SECONDS = 300;

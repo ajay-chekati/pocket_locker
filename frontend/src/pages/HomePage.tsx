@@ -1,11 +1,11 @@
-import { Link } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext.js";
 import { UploadDropzone } from "../features/files/UploadDropzone.js";
+import { RecentUploads } from "../features/files/RecentUploads.js";
 import { LandingPage } from "./LandingPage.js";
 
 /**
  * Index route. Logged-out visitors see the landing page; signed-in users see
- * the upload-focused home. (Upload UI + recent uploads arrive in PR 2/PR 3.)
+ * the upload-focused home with their most recent uploads below.
  */
 export function HomePage() {
   const { user } = useAuth();
@@ -17,9 +17,7 @@ export function HomePage() {
       <h1>Welcome back</h1>
       <p>Drop a file here or pick one from your device to upload.</p>
       <UploadDropzone />
-      <p>
-        <Link to="/uploads">View your uploads</Link>
-      </p>
+      <RecentUploads />
     </section>
   );
 }
