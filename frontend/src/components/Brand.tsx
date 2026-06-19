@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
+import { LockerMark } from "./LockerMark.js";
 
 export const BRAND = "POCKET LOCKER";
 
-/** The clickable wordmark (red square + spaced caps) used in every header/footer. */
+/** The clickable wordmark (locker mark + spaced caps) used in every header/footer. */
 export function Brand({ to = "/" }: { to?: string }) {
   return (
     <Link
@@ -10,7 +11,7 @@ export function Brand({ to = "/" }: { to?: string }) {
       className="pl-bare"
       style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}
     >
-      <span style={{ width: 11, height: 11, borderRadius: 3, background: "var(--accent)" }} />
+      <LockerMark size={26} />
       <span
         style={{
           fontWeight: 800,
