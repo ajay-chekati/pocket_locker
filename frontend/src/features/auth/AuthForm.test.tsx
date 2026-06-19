@@ -20,9 +20,10 @@ describe("AuthForm", () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.type(screen.getByLabelText(/email/i), "user@example.com");
-    await user.type(screen.getByLabelText(/password/i), "short");
-    await user.click(screen.getByRole("button", { name: /create account/i }));
+    await user.type(screen.getByLabelText("Name"), "Jordan Avery");
+    await user.type(screen.getByLabelText("Email"), "user@example.com");
+    await user.type(screen.getByLabelText("Password"), "short");
+    await user.click(screen.getByRole("button", { name: /create locker/i }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
   });

@@ -1,10 +1,10 @@
+import { AppShell } from "../components/AppShell.js";
 import { FileBrowser } from "../features/files/FileBrowser.js";
 
 export function UploadsPage() {
   return (
-    <section>
-      <h1>Uploads</h1>
+    <AppShell>
       <FileBrowser />
-    </section>
+    </AppShell>
   );
 }

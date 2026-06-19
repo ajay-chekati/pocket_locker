@@ -8,6 +8,7 @@ import { requireAuth } from "../../middleware/requireAuth.js";
 import {
   confirmUpload,
   createUpload,
+  getUsage,
   getViewUrl,
   listFiles,
 } from "./files.service.js";
@@ -30,6 +31,13 @@ filesRouter.post(
   asyncHandler(async (req, res) => {
     const input = createUploadSchema.parse(req.body);
     res.status(201).json(await createUpload(req.user!.id, input));
+  }),
+);
+
+filesRouter.get(
+  "/usage",
+  asyncHandler(async (req, res) => {
+    res.json(await getUsage(req.user!.id));
   }),
 );
 

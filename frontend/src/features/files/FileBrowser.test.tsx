@@ -3,9 +3,13 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { FileDto, Page } from "@pocket-locker/shared";
 import type { ListFilesParams } from "./filesApi.js";
+import { ToastProvider } from "../../components/ToastProvider.js";
 
 const list = vi.fn();
-vi.mock("./filesApi.js", () => ({ filesApi: { list: (p: ListFilesParams) => list(p) } }));
+const getUsage = vi.fn().mockResolvedValue({ used: 1024, quota: 100 * 1024 * 1024 });
+vi.mock("./filesApi.js", () => ({
+  filesApi: { list: (p: ListFilesParams) => list(p), getUsage: () => getUsage() },
+}));
 
 const { FileBrowser } = await import("./FileBrowser.js");
 
@@ -27,7 +31,9 @@ function renderBrowser() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <FileBrowser />
+      <ToastProvider>
+        <FileBrowser />
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -47,7 +53,7 @@ describe("FileBrowser", () => {
     renderBrowser();
     await screen.findByText("a.png");
 
-    fireEvent.click(screen.getByRole("tab", { name: "Largest" }));
+    fireEvent.click(screen.getByRole("button", { name: "Largest" }));
 
     await waitFor(() =>
       expect(list).toHaveBeenCalledWith(expect.objectContaining({ sort: "largest" })),

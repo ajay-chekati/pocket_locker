@@ -1,26 +1,29 @@
 import { Route, Routes } from "react-router-dom";
-import { AppLayout } from "./components/AppLayout.js";
 import { HomePage } from "./pages/HomePage.js";
 import { UploadsPage } from "./pages/UploadsPage.js";
+import { ProPage } from "./pages/ProPage.js";
 import { LoginPage } from "./features/auth/LoginPage.js";
 import { SignupPage } from "./features/auth/SignupPage.js";
 import { VerifyOtpPage } from "./features/auth/VerifyOtpPage.js";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute.js";
 
+/**
+ * Each screen renders its own chrome (landing header/footer, the minimal auth
+ * header, or the signed-in app shell), so routes here stay flat — no shared
+ * layout wrapper to fight with the three different headers in the design.
+ */
 export function App() {
   return (
     <Routes>
-      <Route element={<AppLayout />}>
-        {/* Public: index renders landing vs home based on auth. */}
-        <Route index element={<HomePage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="signup" element={<SignupPage />} />
-        <Route path="verify" element={<VerifyOtpPage />} />
+      {/* Index: landing when logged out, the upload home when signed in. */}
+      <Route index element={<HomePage />} />
+      <Route path="login" element={<LoginPage />} />
+      <Route path="signup" element={<SignupPage />} />
+      <Route path="verify" element={<VerifyOtpPage />} />
+      <Route path="pro" element={<ProPage />} />
 
-        {/* Authenticated-only. */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="uploads" element={<UploadsPage />} />
-        </Route>
+      <Route element={<ProtectedRoute />}>
+        <Route path="uploads" element={<UploadsPage />} />
       </Route>
     </Routes>
   );

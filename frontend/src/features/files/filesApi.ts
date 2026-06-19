@@ -4,6 +4,7 @@ import type {
   FileDto,
   FileSort,
   Page,
+  UsageResponse,
   ViewUrlResponse,
 } from "@pocket-locker/shared";
 import { api } from "../../lib/apiClient.js";
@@ -29,6 +30,7 @@ export const filesApi = {
   },
   getViewUrl: (fileId: string) =>
     api<ViewUrlResponse>(`/files/${fileId}/view-url`),
+  getUsage: () => api<UsageResponse>("/files/usage"),
 };
 
 /**
@@ -40,6 +42,7 @@ export function uploadToSignedUrl(
   url: string,
   file: File,
   onProgress: (loaded: number, total: number) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -56,6 +59,14 @@ export function uploadToSignedUrl(
         ? resolve()
         : reject(new Error(`Upload failed (${xhr.status})`));
     xhr.onerror = () => reject(new Error("Upload failed"));
+    xhr.onabort = () => reject(new DOMException("Upload canceled", "AbortError"));
+    if (signal) {
+      if (signal.aborted) {
+        xhr.abort();
+      } else {
+        signal.addEventListener("abort", () => xhr.abort(), { once: true });
+      }
+    }
     xhr.send(file);
   });
 }

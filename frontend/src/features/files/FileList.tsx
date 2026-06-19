@@ -1,60 +1,71 @@
-import { Suspense, lazy, useState } from "react";
+import { useState } from "react";
 import type { FileDto } from "@pocket-locker/shared";
-import { formatBytes, formatDate } from "../../lib/format.js";
-
-// Office renderers (mammoth/SheetJS) are heavy and only needed once a preview
-// opens, so the previewer is split into an on-demand chunk.
-const FilePreview = lazy(() =>
-  import("./FilePreview.js").then((m) => ({ default: m.FilePreview })),
-);
+import { extOf, formatBytes, formatDate, kindLabel } from "../../lib/format.js";
+import { DownloadIcon } from "../../components/icons.js";
+import { PreviewHost } from "./PreviewHost.js";
+import { useDownload } from "./useDownload.js";
 
 /**
- * Renders a list of files; clicking a row opens an inline preview. Owns the
- * selected-file state so both the uploads browser and the home "recent" list
- * get preview for free. Presentation is intentionally bare (design pass later).
+ * The uploads list. Each row opens an inline preview; the trailing download
+ * icon downloads without opening the preview. Owns the selected-file state.
  */
 export function FileList({ files }: { files: FileDto[] }) {
   const [selected, setSelected] = useState<FileDto | null>(null);
+  const download = useDownload();
 
   if (files.length === 0) return null;
 
   return (
     <>
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {files.map((file) => (
-          <li key={file.id}>
+      <div style={{ marginTop: 24, border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", background: "var(--bg-elev)" }}>
+        {files.map((file, i) => (
+          <div
+            key={file.id}
+            onClick={() => setSelected(file)}
+            className="pl-file-row"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              padding: "15px 20px",
+              borderBottom: i === files.length - 1 ? "none" : "1px solid var(--border)",
+              background: "transparent",
+              color: "var(--text)",
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ flex: "none", padding: "5px 9px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--accent)", fontSize: 11, fontWeight: 700, letterSpacing: ".03em", minWidth: 46, textAlign: "center" }}>
+              {extOf(file.name)}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {file.name}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                {kindLabel(file.previewKind)} · {formatDate(file.createdAt)}
+              </div>
+            </div>
+            <span className="pl-hidem" style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600, whiteSpace: "nowrap" }}>
+              {formatBytes(file.size)}
+            </span>
             <button
               type="button"
-              onClick={() => setSelected(file)}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 16,
-                width: "100%",
-                textAlign: "left",
-                padding: "8px 4px",
-                background: "none",
-                border: "none",
-                borderBottom: "1px solid #eee",
-                cursor: "pointer",
+              title="Download"
+              aria-label={`Download ${file.name}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                void download(file);
               }}
+              className="pl-row-action pl-bare"
+              style={{ flex: "none", width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, color: "var(--text-2)" }}
             >
-              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                {file.name}
-              </span>
-              <span style={{ color: "#666", whiteSpace: "nowrap" }}>
-                {formatBytes(file.size)} · {formatDate(file.createdAt)}
-              </span>
+              <DownloadIcon />
             </button>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
 
-      {selected && (
-        <Suspense fallback={null}>
-          <FilePreview file={selected} onClose={() => setSelected(null)} />
-        </Suspense>
-      )}
+      <PreviewHost file={selected} onClose={() => setSelected(null)} />
     </>
   );
 }

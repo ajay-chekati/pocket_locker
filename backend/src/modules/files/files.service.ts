@@ -9,6 +9,7 @@ import {
   type FileDto,
   type ListFilesQuery,
   type Page,
+  type UsageResponse,
   type ViewUrlResponse,
 } from "@pocket-locker/shared";
 import { prisma } from "../../lib/prisma.js";
@@ -50,6 +51,15 @@ async function quotaFor(userId: string): Promise<number> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw notFound("User not found");
   return PLAN_QUOTAS[user.plan];
+}
+
+/** Storage used vs. the plan quota — powers the header indicator + storage modal. */
+export async function getUsage(userId: string): Promise<UsageResponse> {
+  const [used, quota] = await Promise.all([
+    getUsedBytes(userId),
+    quotaFor(userId),
+  ]);
+  return { used, quota };
 }
 
 /**
