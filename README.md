@@ -1,8 +1,7 @@
 # Pocket Locker
 
-A small file-storage SaaS: sign up, upload files (up to 40 MB each, 100 MB total
-on the free tier), browse/search them, and download. Built as a take-home
-project with an emphasis on clean, readable code and clear structure.
+A pocket sized file-storage SaaS: sign up, upload files (up to 40 MB each, 100 MB total
+on the free tier), browse/search them, and download. 
 
 ## Stack
 

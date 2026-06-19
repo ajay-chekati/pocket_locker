@@ -2,7 +2,7 @@
   "name": "pocket-locker",
   "private": true,
   "version": "0.0.0",
-  "description": "Pocket Locker — a small file-storage SaaS (take-home project)",
+  "description": "Pocket Locker — a small file-storage SaaS",
   "workspaces": [
     "shared",
     "backend",
