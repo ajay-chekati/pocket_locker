@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext.js";
+import { UploadDropzone } from "../features/files/UploadDropzone.js";
 import { LandingPage } from "./LandingPage.js";
 
 /**
@@ -14,7 +15,8 @@ export function HomePage() {
   return (
     <section>
       <h1>Welcome back</h1>
-      <p>Drop files here or pick from your device to upload. (Coming in PR 2.)</p>
+      <p>Drop a file here or pick one from your device to upload.</p>
+      <UploadDropzone />
       <p>
         <Link to="/uploads">View your uploads</Link>
       </p>
