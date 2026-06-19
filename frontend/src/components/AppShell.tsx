@@ -3,13 +3,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext.js";
 import { useUsage } from "../features/files/useFiles.js";
 import { StorageModal } from "../features/files/StorageModal.js";
-import { DesignTokensModal } from "./DesignTokensModal.js";
 import { Brand, BRAND } from "./Brand.js";
 import { useTheme } from "../theme/ThemeProvider.js";
 import { formatBytes } from "../lib/format.js";
 import { AccountIcon, HomeIcon, LogoutIcon, MoonIcon, UploadIcon } from "./icons.js";
 
-type Modal = "storage" | "tokens" | null;
+type Modal = "storage" | null;
 
 /**
  * Signed-in app chrome: top header (brand, centered nav, storage + theme +
@@ -117,9 +116,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span style={{ fontWeight: 700, letterSpacing: ".16em", color: "var(--text-2)" }}>{BRAND}</span>
           <span style={{ marginLeft: 4 }}>© 2026</span>
         </div>
-        <button type="button" onClick={() => setModal("tokens")} className="pl-link-muted" style={{ fontWeight: 600, fontSize: 12.5 }}>
-          Design system
-        </button>
       </footer>
 
       {/* Mobile bottom nav. */}
@@ -149,7 +145,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       {modal === "storage" && <StorageModal onClose={() => setModal(null)} />}
-      {modal === "tokens" && <DesignTokensModal onClose={() => setModal(null)} />}
     </div>
   );
 }

@@ -72,3 +72,12 @@ export const previewKindFor = (mime: string): PreviewKind =>
 
 /** Value for an <input type="file" accept="..."> attribute. */
 export const acceptAttribute = ALLOWED_MIME_TYPES.join(",");
+
+/** De-duplicated list of every allowed extension, e.g. [".jpg", ".png", …]. */
+export const allowedExtensions = Array.from(
+  new Set(Object.values(ALLOWED_FILE_TYPES).flatMap((t) => t.extensions)),
+);
+
+/** Short, human-readable summary of the accepted formats for UI hints. */
+export const allowedTypesSummary =
+  "Images, PDF, Word, Excel, PowerPoint, text, audio, video & zip";

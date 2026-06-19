@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../components/AppShell.js";
 import { Equalizer } from "../components/Equalizer.js";
 import { useToast } from "../components/ToastProvider.js";
 import { ApiRequestError } from "../lib/apiClient.js";
 import { proApi } from "../features/pro/proApi.js";
+import { useAuth } from "../features/auth/AuthContext.js";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -15,9 +16,17 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 export function ProPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [email, setEmail] = useState("");
+  const { user } = useAuth();
+  // Pre-fill the signed-in user's email; they can still edit before submitting.
+  const [email, setEmail] = useState(user?.email ?? "");
   const [joined, setJoined] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // On a direct visit the user may resolve after mount; fill the still-empty
+  // field once it arrives (without clobbering anything the user has typed).
+  useEffect(() => {
+    if (user?.email) setEmail((current) => current || user.email);
+  }, [user?.email]);
 
   const notify = async () => {
     if (!EMAIL_RE.test(email)) {

@@ -1,14 +1,10 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Brand, BRAND } from "../components/Brand.js";
 import { ThemeToggle } from "../components/ThemeToggle.js";
 import { Equalizer } from "../components/Equalizer.js";
-import { DesignTokensModal } from "../components/DesignTokensModal.js";
 
 /** Logged-out marketing page. Carries its own header + footer chrome. */
 export function LandingPage() {
-  const [showTokens, setShowTokens] = useState(false);
-
   return (
     <div className="pl-root">
       <div className="pl-anim-up">
@@ -140,17 +136,12 @@ export function LandingPage() {
             <span style={{ marginLeft: 4 }}>© 2026</span>
           </div>
           <div style={{ display: "flex", gap: 22, fontSize: 12.5 }}>
-            <button type="button" onClick={() => setShowTokens(true)} className="pl-link-muted" style={{ fontWeight: 600, fontSize: 12.5 }}>
-              Design system
-            </button>
             <Link to="/pro" className="pl-link-muted" style={{ fontWeight: 600, fontSize: 12.5, textDecoration: "none" }}>
               Pro
             </Link>
           </div>
         </footer>
       </div>
-
-      {showTokens && <DesignTokensModal onClose={() => setShowTokens(false)} />}
     </div>
   );
 }
