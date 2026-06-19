@@ -45,6 +45,14 @@ model EmailOtp {
   @@index([email])
 }
 
+/// Pro waitlist signups. Email is unique so repeat signups are idempotent and
+/// the list can't accumulate duplicates. Pro has no backend yet (PR 5).
+model WaitlistEntry {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
 model File {
   id          String     @id @default(uuid())
   userId      String
