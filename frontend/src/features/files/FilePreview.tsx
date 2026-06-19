@@ -17,14 +17,18 @@ import { useDownload } from "./useDownload.js";
  *   office (.docx/.xlsx)    → converted to HTML client-side (mammoth / SheetJS)
  *   none                   → metadata card
  */
+/** Kinds that render into a large viewer worth filling the modal height. */
+const FILLS_HEIGHT = new Set(["image", "pdf", "video", "text", "office"]);
+
 export function FilePreview({ file, onClose }: { file: FileDto; onClose: () => void }) {
   const { data, isLoading, isError } = useViewUrl(file.id);
   const download = useDownload();
   const url = data?.url;
+  const fills = FILLS_HEIGHT.has(file.previewKind);
 
   return (
-    <Modal onClose={onClose} maxWidth={860} padding={28} label={`Preview of ${file.name}`}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
+    <Modal onClose={onClose} maxWidth={880} padding={24} fitHeight={fills} label={`Preview of ${file.name}`}>
+      <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
         <span style={{ flex: "none", padding: "5px 10px", borderRadius: 8, background: "var(--accent-soft)", color: "var(--accent)", fontSize: 11, fontWeight: 700 }}>
           {extOf(file.name)}
         </span>
@@ -36,13 +40,13 @@ export function FilePreview({ file, onClose }: { file: FileDto; onClose: () => v
         </button>
       </div>
 
-      <div>
+      <div style={{ flex: fills ? "1 1 auto" : "none", minHeight: 0, display: "flex", flexDirection: "column" }}>
         {isLoading && <Centered>Loading preview…</Centered>}
         {isError && <Centered alert>Couldn't load this file.</Centered>}
         {url && <PreviewBody file={file} url={url} />}
       </div>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
+      <div style={{ flex: "none", display: "flex", gap: 10, marginTop: 20 }}>
         <button
           type="button"
           onClick={() => void download(file)}
@@ -81,20 +85,23 @@ const frameStyle: React.CSSProperties = {
   background: "var(--surface)",
 };
 
+/** Fill the modal's flexible middle region (used by the large viewers). */
+const fillStyle: React.CSSProperties = { flex: "1 1 auto", minHeight: 0 };
+
 function PreviewBody({ file, url }: { file: FileDto; url: string }) {
   switch (file.previewKind) {
     case "image":
       return (
-        <div style={{ ...frameStyle, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <img src={url} alt={file.name} style={{ maxWidth: "100%", maxHeight: "70vh", height: "auto", borderRadius: 8 }} />
+        <div style={{ ...frameStyle, ...fillStyle, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <img src={url} alt={file.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: 8 }} />
         </div>
       );
     case "pdf":
-      return <iframe src={url} title={file.name} style={{ ...frameStyle, width: "100%", height: "75vh", border: "1px solid var(--border)" }} />;
+      return <iframe src={url} title={file.name} style={{ ...frameStyle, ...fillStyle, width: "100%", background: "#fff" }} />;
     case "video":
       return (
-        <div style={{ ...frameStyle, background: "#0a0a0b", display: "flex", justifyContent: "center" }}>
-          <video src={url} controls style={{ maxWidth: "100%", maxHeight: "75vh" }} />
+        <div style={{ ...frameStyle, ...fillStyle, background: "#0a0a0b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <video src={url} controls style={{ maxWidth: "100%", maxHeight: "100%" }} />
         </div>
       );
     case "audio":
@@ -114,7 +121,7 @@ function PreviewBody({ file, url }: { file: FileDto; url: string }) {
 
 function Centered({ children, alert }: { children: React.ReactNode; alert?: boolean }) {
   return (
-    <div role={alert ? "alert" : undefined} style={{ ...frameStyle, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: 48, color: alert ? "var(--accent)" : "var(--text-2)", fontSize: 14 }}>
+    <div role={alert ? "alert" : undefined} style={{ ...frameStyle, ...fillStyle, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: 48, color: alert ? "var(--accent)" : "var(--text-2)", fontSize: 14 }}>
       {!alert && <Equalizer bars={3} width={3} height={14} gap={3} duration={0.9} />}
       {children}
     </div>
@@ -134,12 +141,12 @@ function TextPreview({ url }: { url: string }) {
     <pre
       style={{
         ...frameStyle,
+        ...fillStyle,
         background: "var(--bg-elev)",
         padding: 24,
         margin: 0,
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
-        maxHeight: "75vh",
         overflow: "auto",
         fontSize: 13,
         lineHeight: 1.6,
@@ -171,7 +178,7 @@ function OfficePreview({ url, mimeType }: { url: string; mimeType: string }) {
   if (isError) return <Centered alert>Couldn't render this document.</Centered>;
   return (
     <div
-      style={{ ...frameStyle, background: "#fff", color: "#0a0a0b", padding: 24, maxHeight: "75vh", overflow: "auto" }}
+      style={{ ...frameStyle, ...fillStyle, background: "#fff", color: "#0a0a0b", padding: 24, overflow: "auto" }}
       // Content is derived from the user's own uploaded file.
       dangerouslySetInnerHTML={{ __html: data ?? "" }}
     />
