@@ -1,0 +1,34 @@
+import { z } from "zod";
+import { MAX_FILE_SIZE_BYTES } from "./constants.js";
+import { isAllowedMimeType, type PreviewKind } from "./fileTypes.js";
+
+/** Request to begin an upload — the client declares the file's metadata. */
+export const createUploadSchema = z.object({
+  name: z.string().min(1).max(255),
+  size: z
+    .number()
+    .int()
+    .positive()
+    .max(MAX_FILE_SIZE_BYTES, "File exceeds the 40 MB per-file limit"),
+  mimeType: z
+    .string()
+    .refine(isAllowedMimeType, { message: "Unsupported file type" }),
+});
+
+export type CreateUploadRequest = z.infer<typeof createUploadSchema>;
+
+/** Response with the signed URL the client PUTs the file to (direct to storage). */
+export interface CreateUploadResponse {
+  fileId: string;
+  uploadUrl: string;
+}
+
+/** Public view of a stored file. */
+export interface FileDto {
+  id: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  previewKind: PreviewKind;
+  createdAt: string;
+}

@@ -5,6 +5,7 @@ import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { filesRouter } from "./modules/files/files.routes.js";
 import { apiLimiter } from "./middleware/rateLimit.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
@@ -21,7 +22,8 @@ export function createApp() {
   // General rate limit on the API surface; auth routes add a stricter limiter.
   app.use(apiLimiter);
   app.use(authRouter);
-  // Further feature routers (files, ...) are mounted here in later PRs.
+  app.use("/files", filesRouter);
+  // Further feature routers mounted here in later PRs.
 
   app.use(notFoundHandler);
   app.use(errorHandler);
