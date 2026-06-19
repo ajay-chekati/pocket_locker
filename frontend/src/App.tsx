@@ -4,6 +4,7 @@ import { HomePage } from "./pages/HomePage.js";
 import { UploadsPage } from "./pages/UploadsPage.js";
 import { LoginPage } from "./features/auth/LoginPage.js";
 import { SignupPage } from "./features/auth/SignupPage.js";
+import { VerifyOtpPage } from "./features/auth/VerifyOtpPage.js";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute.js";
 
 export function App() {
@@ -14,6 +15,7 @@ export function App() {
         <Route index element={<HomePage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignupPage />} />
+        <Route path="verify" element={<VerifyOtpPage />} />
 
         {/* Authenticated-only. */}
         <Route element={<ProtectedRoute />}>
