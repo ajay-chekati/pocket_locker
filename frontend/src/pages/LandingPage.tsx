@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Brand, BRAND } from "../components/Brand.js";
 import { ThemeToggle } from "../components/ThemeToggle.js";
-import { Equalizer } from "../components/Equalizer.js";
+import { HeroLocker } from "../components/HeroLocker.js";
 
 /** Logged-out marketing page. Carries its own header + footer chrome. */
 export function LandingPage() {
@@ -81,7 +81,7 @@ export function LandingPage() {
             </div>
           </div>
 
-          <HeroPreviewCard />
+          <HeroLocker />
         </section>
 
         <section className="pl-pad" style={{ maxWidth: 1240, margin: "0 auto", padding: "24px 48px 96px" }}>
@@ -154,78 +154,6 @@ function Feature({ title, body, icon }: { title: string; body: string; icon: Rea
       </svg>
       <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 8 }}>{title}</div>
       <div style={{ fontSize: 14, lineHeight: 1.55, color: "var(--text-2)" }}>{body}</div>
-    </div>
-  );
-}
-
-/** The static "browser window" mock shown beside the hero copy. */
-function HeroPreviewCard() {
-  return (
-    <div
-      className="pl-hidem"
-      style={{
-        background: "var(--bg-elev)",
-        border: "1px solid var(--border)",
-        borderRadius: 20,
-        boxShadow: "0 40px 70px -28px var(--shadow),0 10px 24px -12px var(--shadow)",
-        overflow: "hidden",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "14px 18px", borderBottom: "1px solid var(--border)" }}>
-        <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--border)" }} />
-        <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--border)" }} />
-        <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--border)" }} />
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)", fontFamily: "ui-monospace,monospace" }}>
-          pocketlocker.app
-        </span>
-      </div>
-      <div style={{ padding: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-          <span style={{ fontSize: 13, fontWeight: 700 }}>Your files</span>
-          <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, fontWeight: 600, color: "var(--text-2)" }}>
-            <span style={{ width: 46, height: 6, borderRadius: 4, background: "var(--border)", overflow: "hidden" }}>
-              <span style={{ display: "block", height: "100%", width: "68%", background: "var(--accent)", borderRadius: 4 }} />
-            </span>
-            68.5 / 100 MB
-          </span>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <MockRow ext="PNG" name="design-mockup.png" size="8.1 MB" />
-          <MockRow ext="PDF" name="Q3-Report.pdf" size="4.2 MB" />
-        </div>
-        <div style={{ marginTop: 14, padding: 16, border: "1.5px dashed var(--accent)", borderRadius: 12, background: "var(--accent-soft)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <span style={{ fontSize: 12, fontWeight: 700 }}>roadmap.key</span>
-            <span style={{ fontSize: 11, color: "var(--text-2)", fontWeight: 600 }}>64% · 12s left</span>
-          </div>
-          <div style={{ marginBottom: 12 }}>
-            <Equalizer bars={5} width={3} height={22} gap={3} />
-          </div>
-          <div style={{ height: 6, borderRadius: 4, background: "var(--border)", overflow: "hidden" }}>
-            <span
-              style={{
-                display: "block",
-                height: "100%",
-                width: "64%",
-                borderRadius: 4,
-                background: "linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#fff))",
-                backgroundSize: "200% 100%",
-                animation: "plShimmer 1.3s linear infinite",
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MockRow({ ext, name, size }: { ext: string; name: string; size: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: "1px solid var(--border)", borderRadius: 10, background: "var(--bg)" }}>
-      <span style={{ padding: "3px 7px", borderRadius: 6, background: "var(--accent-soft)", color: "var(--accent)", fontSize: 10, fontWeight: 700 }}>{ext}</span>
-      <span style={{ fontSize: 12.5, fontWeight: 600 }}>{name}</span>
-      <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }}>{size}</span>
     </div>
   );
 }
