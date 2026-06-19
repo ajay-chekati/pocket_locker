@@ -12,7 +12,7 @@ import {
   verifyPassword,
 } from "../../lib/password.js";
 import { generateOtpCode, hashOtp, verifyOtp } from "../../lib/otp.js";
-import { sendOtpEmail } from "../../lib/mailer.js";
+import { sendOtpEmail, sendPasswordResetEmail } from "../../lib/mailer.js";
 import { signToken } from "../../lib/jwt.js";
 import { env } from "../../config/env.js";
 import { AppError, badRequest, conflict, unauthorized } from "../../lib/errors.js";
@@ -40,19 +40,28 @@ const verificationRequired = (email: string): VerificationRequiredResponse => ({
   email,
 });
 
-/** Invalidate any outstanding codes, then create + email a fresh one. */
-async function issueOtp(email: string): Promise<void> {
-  await prisma.emailOtp.deleteMany({ where: { email, consumedAt: null } });
+type OtpPurpose = "verify" | "reset";
+
+/**
+ * Invalidate any outstanding codes for this email + purpose, then create + email
+ * a fresh one. Scoping by purpose keeps verify and reset codes independent.
+ */
+async function issueOtp(email: string, purpose: OtpPurpose): Promise<void> {
+  await prisma.emailOtp.deleteMany({
+    where: { email, purpose, consumedAt: null },
+  });
 
   const code = generateOtpCode();
   await prisma.emailOtp.create({
     data: {
       email,
+      purpose,
       codeHash: await hashOtp(code),
       expiresAt: new Date(Date.now() + env.OTP_EXPIRY_MINUTES * 60 * 1000),
     },
   });
-  await sendOtpEmail(email, code);
+  if (purpose === "reset") await sendPasswordResetEmail(email, code);
+  else await sendOtpEmail(email, code);
 }
 
 export async function signup(
@@ -79,7 +88,7 @@ export async function signup(
     await prisma.user.create({ data: { email: normalized, passwordHash } });
   }
 
-  await issueOtp(normalized);
+  await issueOtp(normalized, "verify");
   return verificationRequired(normalized);
 }
 
@@ -92,7 +101,7 @@ export async function verifyEmailOtp(
   if (!user) throw badRequest("No pending verification for this email");
 
   const otp = await prisma.emailOtp.findFirst({
-    where: { email: normalized, consumedAt: null },
+    where: { email: normalized, purpose: "verify", consumedAt: null },
     orderBy: { createdAt: "desc" },
   });
   if (!otp) throw badRequest("No active code — request a new one");
@@ -132,7 +141,7 @@ export async function resendOtp(
   // so this can't be used to probe which emails are registered.
   if (user && !user.emailVerified) {
     const latest = await prisma.emailOtp.findFirst({
-      where: { email: normalized },
+      where: { email: normalized, purpose: "verify" },
       orderBy: { createdAt: "desc" },
     });
     if (latest && Date.now() - latest.createdAt.getTime() < RESEND_COOLDOWN_MS) {
@@ -142,7 +151,7 @@ export async function resendOtp(
         "Please wait a moment before requesting another code",
       );
     }
-    await issueOtp(normalized);
+    await issueOtp(normalized, "verify");
   }
   return verificationRequired(normalized);
 }
@@ -168,7 +177,7 @@ export async function login(
 
   // Block unverified accounts and (re)send a fresh code so they can finish.
   if (!user.emailVerified) {
-    await issueOtp(user.email);
+    await issueOtp(user.email, "verify");
     throw new AppError(
       403,
       EMAIL_NOT_VERIFIED,
@@ -177,6 +186,74 @@ export async function login(
   }
 
   return toAuthResponse(user);
+}
+
+/**
+ * Begin a password reset: email a code to a verified account. Always resolves
+ * (no error, no response body) so callers can't probe which emails exist. A
+ * recently-issued code within the cooldown window is left in place rather than
+ * re-sent, to avoid email spam.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const normalized = normalizeEmail(email);
+  const user = await prisma.user.findUnique({ where: { email: normalized } });
+
+  // Only verified accounts can reset; an unverified one finishes signup instead.
+  if (!user?.emailVerified) return;
+
+  const latest = await prisma.emailOtp.findFirst({
+    where: { email: normalized, purpose: "reset" },
+    orderBy: { createdAt: "desc" },
+  });
+  if (latest && Date.now() - latest.createdAt.getTime() < RESEND_COOLDOWN_MS) {
+    return;
+  }
+  await issueOtp(normalized, "reset");
+}
+
+/**
+ * Complete a password reset: verify the emailed code, set the new password, and
+ * log the user in. Uses a single vague error so it can't reveal which step failed
+ * (or whether the email exists).
+ */
+export async function resetPassword(
+  email: string,
+  code: string,
+  password: string,
+): Promise<AuthResponse> {
+  const normalized = normalizeEmail(email);
+  const user = await prisma.user.findUnique({ where: { email: normalized } });
+  const invalid = badRequest("Invalid or expired code");
+  if (!user) throw invalid;
+
+  const otp = await prisma.emailOtp.findFirst({
+    where: { email: normalized, purpose: "reset", consumedAt: null },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!otp || otp.expiresAt < new Date()) throw invalid;
+  if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+    throw badRequest("Too many attempts — request a new code");
+  }
+
+  if (!(await verifyOtp(code, otp.codeHash))) {
+    await prisma.emailOtp.update({
+      where: { id: otp.id },
+      data: { attempts: { increment: 1 } },
+    });
+    throw badRequest("Incorrect code");
+  }
+
+  await prisma.emailOtp.update({
+    where: { id: otp.id },
+    data: { consumedAt: new Date() },
+  });
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    // Resetting proves email ownership, so verify the account too (handles a
+    // user who never finished signup but later resets).
+    data: { passwordHash: await hashPassword(password), emailVerified: true },
+  });
+  return toAuthResponse(updated);
 }
 
 export async function getUserById(id: string): Promise<UserDto | null> {

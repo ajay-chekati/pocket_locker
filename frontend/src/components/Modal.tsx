@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Overlay + centered panel used by every modal (storage, preview, tokens).
@@ -10,12 +11,21 @@ export function Modal({
   maxWidth = 440,
   padding = 32,
   label,
+  fitHeight = false,
   children,
 }: {
   onClose: () => void;
   maxWidth?: number;
   padding?: number;
   label?: string;
+  /**
+   * When true the panel becomes a fixed-height flex column (capped to the
+   * viewport) instead of growing with its content. Children lay out as flex
+   * rows: pin a header/footer with `flex: "none"` and let a middle region
+   * `flex: 1` fill and scroll. Used by the file previewer so large media never
+   * pushes the modal past the window.
+   */
+  fitHeight?: boolean;
   children: ReactNode;
 }) {
   useEffect(() => {
@@ -24,7 +34,10 @@ export function Modal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  return (
+  // Portal to <body> so the fixed overlay is positioned relative to the viewport.
+  // Rendered inline it would be trapped by any transformed ancestor (e.g. a
+  // section mid entrance-animation), which throws off centering/sizing.
+  return createPortal(
     <div
       onClick={onClose}
       style={{
@@ -48,19 +61,28 @@ export function Modal({
         style={{
           width: "100%",
           maxWidth,
-          maxHeight: "92vh",
-          overflow: "auto",
           background: "var(--bg)",
           border: "1px solid var(--border)",
           borderRadius: 20,
           padding,
           boxShadow: "0 36px 80px -24px rgba(0,0,0,.5)",
           animation: "plPop .3s ease both",
+          ...(fitHeight
+            ? {
+                // Definite height so a flex:1 child (e.g. the PDF iframe) has a
+                // box to fill; capped to the viewport so it never overflows.
+                height: "min(88vh, 820px)",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }
+            : { maxHeight: "92vh", overflow: "auto" }),
         }}
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

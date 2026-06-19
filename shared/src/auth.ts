@@ -20,10 +20,22 @@ export const resendOtpSchema = z.object({
   email: z.string().email().max(254),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email().max(254),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email().max(254),
+  code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code"),
+  password: z.string().min(8).max(128),
+});
+
 export type SignupRequest = z.infer<typeof signupSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type VerifyOtpRequest = z.infer<typeof verifyOtpSchema>;
 export type ResendOtpRequest = z.infer<typeof resendOtpSchema>;
+export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
 
 /** Public-safe view of a user (never includes the password hash). */
 export interface UserDto {

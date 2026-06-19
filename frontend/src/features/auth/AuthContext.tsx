@@ -25,6 +25,10 @@ interface AuthContextValue {
   verifyOtp: (email: string, code: string) => Promise<void>;
   resendOtp: (email: string) => Promise<void>;
   login: (body: LoginRequest) => Promise<void>;
+  /** Email a password-reset code (always resolves — never reveals existence). */
+  requestPasswordReset: (email: string) => Promise<void>;
+  /** Set a new password with the emailed code; on success the user is logged in. */
+  resetPassword: (email: string, code: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -68,14 +72,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.user);
   }, []);
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    await authApi.forgotPassword({ email });
+  }, []);
+
+  const resetPassword = useCallback(
+    async (email: string, code: string, password: string) => {
+      const res = await authApi.resetPassword({ email, code, password });
+      tokenStore.set(res.token);
+      setUser(res.user);
+    },
+    [],
+  );
+
   const logout = useCallback(() => {
     tokenStore.clear();
     setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, signup, verifyOtp, resendOtp, login, logout }),
-    [user, loading, signup, verifyOtp, resendOtp, login, logout],
+    () => ({
+      user,
+      loading,
+      signup,
+      verifyOtp,
+      resendOtp,
+      login,
+      requestPasswordReset,
+      resetPassword,
+      logout,
+    }),
+    [
+      user,
+      loading,
+      signup,
+      verifyOtp,
+      resendOtp,
+      login,
+      requestPasswordReset,
+      resetPassword,
+      logout,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

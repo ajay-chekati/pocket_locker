@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
-import { acceptAttribute } from "@pocket-locker/shared";
+import { acceptAttribute, allowedExtensions, allowedTypesSummary } from "@pocket-locker/shared";
 import { Equalizer } from "../../components/Equalizer.js";
 import { UploadIcon } from "../../components/icons.js";
 import { useToast } from "../../components/ToastProvider.js";
@@ -130,6 +130,12 @@ export function UploadDropzone() {
             </div>
             <div style={{ fontSize: 12.5, color: "var(--muted)", letterSpacing: ".02em" }}>
               Up to 40 MB per file · 100 MB total
+            </div>
+            <div
+              title={allowedExtensions.join(", ")}
+              style={{ fontSize: 12, color: "var(--muted)", maxWidth: 360, lineHeight: 1.5 }}
+            >
+              {allowedTypesSummary}
             </div>
           </div>
         )}

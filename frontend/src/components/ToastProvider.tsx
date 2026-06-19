@@ -7,7 +7,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Equalizer } from "./Equalizer.js";
 
 interface ToastContextValue {
   /** Show a transient message at the bottom of the screen (auto-dismisses). */
@@ -47,9 +46,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             bottom: 90,
             transform: "translateX(-50%)",
             zIndex: 60,
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
             padding: "13px 20px",
             background: "var(--text)",
             color: "var(--bg)",
@@ -61,7 +57,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             maxWidth: "90vw",
           }}
         >
-          <Equalizer bars={3} width={2.5} height={13} gap={2.5} duration={0.8} stagger={0.1} />
           {message}
         </div>
       )}

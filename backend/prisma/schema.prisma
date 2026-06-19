@@ -21,6 +21,11 @@ enum FileStatus {
   ready
 }
 
+enum OtpPurpose {
+  verify // email-ownership verification at signup
+  reset // password reset
+}
+
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
@@ -32,15 +37,17 @@ model User {
   files File[]
 }
 
-/// One-time codes for email (signup) verification. Codes are hashed at rest.
+/// One-time codes for email verification (signup) and password reset. Codes are
+/// hashed at rest and scoped by `purpose` so a verify code can't reset a password.
 model EmailOtp {
-  id         String    @id @default(uuid())
+  id         String     @id @default(uuid())
   email      String
+  purpose    OtpPurpose @default(verify)
   codeHash   String
   expiresAt  DateTime
-  attempts   Int       @default(0)
+  attempts   Int        @default(0)
   consumedAt DateTime?
-  createdAt  DateTime  @default(now())
+  createdAt  DateTime   @default(now())
 
   @@index([email])
 }
