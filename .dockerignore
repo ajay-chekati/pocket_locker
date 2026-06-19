@@ -1,0 +1,14 @@
+# Build context is the repo root. Keep node_modules, build output, secrets,
+# and local cruft out of the image / build context.
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.claude
+*.log
+.DS_Store

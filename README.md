@@ -72,6 +72,26 @@ npm test            # backend (vitest + supertest) and frontend (vitest)
 npm run typecheck   # type-check every workspace
 ```
 
+Backend integration tests stub Prisma and the mailer in-memory, so they need no
+database. For manual/e2e checks the app runs against the Supabase DB directly
+(no local Docker needed) — see the local-dev steps above.
+
+## Deploy (Cloud Run)
+
+The root [`Dockerfile`](Dockerfile) builds the backend image and is picked up
+automatically by Cloud Build:
+
+```bash
+gcloud run deploy pocket-locker-api --source . --region <region>
+```
+
+The server listens on `process.env.PORT` (Cloud Run injects `8080`) and binds
+`0.0.0.0`. Set the backend env vars (`DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`,
+`SUPABASE_*`, `SMTP_*`, `CORS_ORIGIN`) as Cloud Run service variables/secrets.
+Run `prisma migrate deploy` as a separate step (not on container start) so
+instances don't race. The frontend deploys to Vercel with `VITE_API_URL` set to
+the Cloud Run URL.
+
 ## Notable decisions & tradeoffs
 
 - **Signed-URL uploads** — files go directly from browser to Supabase Storage,

@@ -1,6 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginSchema, signupSchema } from "@pocket-locker/shared";
+import {
+  EMAIL_NOT_VERIFIED,
+  loginSchema,
+  signupSchema,
+} from "@pocket-locker/shared";
 import { ApiRequestError } from "../../lib/apiClient.js";
 import { useAuth } from "./AuthContext.js";
 
@@ -10,6 +14,10 @@ type Mode = "login" | "signup";
 export function AuthForm({ mode }: { mode: Mode }) {
   const { login, signup } = useAuth();
   const navigate = useNavigate();
+
+  /** Move to the OTP step, carrying the email along. */
+  const goVerify = (verifyEmail: string) =>
+    navigate("/verify", { state: { email: verifyEmail } });
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,10 +38,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
     setSubmitting(true);
     try {
-      if (mode === "signup") await signup(parsed.data);
-      else await login(parsed.data);
+      if (mode === "signup") {
+        const pendingEmail = await signup(parsed.data);
+        goVerify(pendingEmail);
+        return;
+      }
+      await login(parsed.data);
       navigate("/");
     } catch (err) {
+      // An unverified account can't log in yet — send them to verify instead.
+      if (
+        err instanceof ApiRequestError &&
+        err.error.code === EMAIL_NOT_VERIFIED
+      ) {
+        goVerify(parsed.data.email);
+        return;
+      }
       setError(
         err instanceof ApiRequestError
           ? err.error.message

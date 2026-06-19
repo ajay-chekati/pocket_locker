@@ -1,10 +1,21 @@
 import { Router } from "express";
-import { loginSchema, signupSchema } from "@pocket-locker/shared";
+import {
+  loginSchema,
+  resendOtpSchema,
+  signupSchema,
+  verifyOtpSchema,
+} from "@pocket-locker/shared";
 import { asyncHandler } from "../../lib/asyncHandler.js";
 import { authLimiter } from "../../middleware/rateLimit.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
 import { notFound } from "../../lib/errors.js";
-import { getUserById, login, signup } from "./auth.service.js";
+import {
+  getUserById,
+  login,
+  resendOtp,
+  signup,
+  verifyEmailOtp,
+} from "./auth.service.js";
 
 export const authRouter = Router();
 
@@ -13,8 +24,26 @@ authRouter.post(
   authLimiter,
   asyncHandler(async (req, res) => {
     const { email, password } = signupSchema.parse(req.body);
-    const result = await signup(email, password);
-    res.status(201).json(result);
+    // 202 Accepted: account created but pending email verification (no token yet).
+    res.status(202).json(await signup(email, password));
+  }),
+);
+
+authRouter.post(
+  "/auth/verify-otp",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const { email, code } = verifyOtpSchema.parse(req.body);
+    res.json(await verifyEmailOtp(email, code));
+  }),
+);
+
+authRouter.post(
+  "/auth/resend-otp",
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    const { email } = resendOtpSchema.parse(req.body);
+    res.json(await resendOtp(email));
   }),
 );
 
@@ -23,8 +52,7 @@ authRouter.post(
   authLimiter,
   asyncHandler(async (req, res) => {
     const { email, password } = loginSchema.parse(req.body);
-    const result = await login(email, password);
-    res.json(result);
+    res.json(await login(email, password));
   }),
 );
 

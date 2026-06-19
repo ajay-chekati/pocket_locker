@@ -19,8 +19,12 @@ interface AuthContextValue {
   user: UserDto | null;
   /** True until the initial token check resolves, to avoid auth UI flicker. */
   loading: boolean;
+  /** Returns the email pending verification (signup never logs in directly). */
+  signup: (body: SignupRequest) => Promise<string>;
+  /** Verify the emailed OTP; on success the user is logged in. */
+  verifyOtp: (email: string, code: string) => Promise<void>;
+  resendOtp: (email: string) => Promise<void>;
   login: (body: LoginRequest) => Promise<void>;
-  signup: (body: SignupRequest) => Promise<void>;
   logout: () => void;
 }
 
@@ -43,14 +47,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback(async (body: LoginRequest) => {
-    const res = await authApi.login(body);
+  const signup = useCallback(async (body: SignupRequest) => {
+    const res = await authApi.signup(body);
+    return res.email; // pending verification — no token yet
+  }, []);
+
+  const verifyOtp = useCallback(async (email: string, code: string) => {
+    const res = await authApi.verifyOtp({ email, code });
     tokenStore.set(res.token);
     setUser(res.user);
   }, []);
 
-  const signup = useCallback(async (body: SignupRequest) => {
-    const res = await authApi.signup(body);
+  const resendOtp = useCallback(async (email: string) => {
+    await authApi.resendOtp({ email });
+  }, []);
+
+  const login = useCallback(async (body: LoginRequest) => {
+    const res = await authApi.login(body);
     tokenStore.set(res.token);
     setUser(res.user);
   }, []);
@@ -61,8 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, signup, logout }),
-    [user, loading, login, signup, logout],
+    () => ({ user, loading, signup, verifyOtp, resendOtp, login, logout }),
+    [user, loading, signup, verifyOtp, resendOtp, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

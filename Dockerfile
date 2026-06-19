@@ -1,5 +1,6 @@
-# Built from the repo root so the `shared` workspace is in context:
-#   docker build -f backend/Dockerfile .
+# Backend image. Built from the repo root so the `shared` workspace is in
+# context. Cloud Run / Cloud Build pick this up automatically:
+#   gcloud run deploy pocket-locker-api --source .
 FROM node:22-slim AS base
 WORKDIR /app
 # Prisma needs OpenSSL at runtime.
@@ -21,6 +22,9 @@ RUN npm run build --workspace shared \
 # ---- runtime ----
 FROM base AS runtime
 ENV NODE_ENV=production
+# Cloud Run injects PORT (defaults to 8080); the server reads process.env.PORT
+# and binds 0.0.0.0 via app.listen(port).
+ENV PORT=8080
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/shared/dist ./shared/dist
 COPY --from=build /app/shared/package.json ./shared/package.json
@@ -28,5 +32,5 @@ COPY --from=build /app/backend/dist ./backend/dist
 COPY --from=build /app/backend/package.json ./backend/package.json
 COPY --from=build /app/backend/prisma ./backend/prisma
 WORKDIR /app/backend
-EXPOSE 4000
+EXPOSE 8080
 CMD ["node", "dist/server.js"]
