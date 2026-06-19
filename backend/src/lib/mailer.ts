@@ -37,3 +37,20 @@ export async function sendOtpEmail(to: string, code: string): Promise<void> {
 
   await tx.sendMail({ from: env.SMTP_FROM, to, subject, text });
 }
+
+export async function sendPasswordResetEmail(
+  to: string,
+  code: string,
+): Promise<void> {
+  const subject = "Your Pocket Locker password reset code";
+  const text = `Use this code to reset your password: ${code}. It expires in ${env.OTP_EXPIRY_MINUTES} minutes. If you didn't request this, you can ignore this email.`;
+
+  const tx = getTransporter();
+  if (!tx) {
+    // Dev fallback — no SMTP configured.
+    logger.info({ to, code }, `[dev] password reset code for ${to}: ${code}`);
+    return;
+  }
+
+  await tx.sendMail({ from: env.SMTP_FROM, to, subject, text });
+}

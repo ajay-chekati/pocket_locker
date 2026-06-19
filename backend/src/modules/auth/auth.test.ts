@@ -44,6 +44,9 @@ vi.mock("../../lib/prisma.js", () => ({
       }),
       findFirst: vi.fn(async ({ where, orderBy }: any) => {
         let matches = otps.filter((o) => o.email === where.email);
+        if (where.purpose) {
+          matches = matches.filter((o) => o.purpose === where.purpose);
+        }
         if (where.consumedAt === null) {
           matches = matches.filter((o) => o.consumedAt === null);
         }
@@ -64,6 +67,7 @@ vi.mock("../../lib/prisma.js", () => ({
         for (let i = otps.length - 1; i >= 0; i--) {
           if (
             otps[i].email === where.email &&
+            (!where.purpose || otps[i].purpose === where.purpose) &&
             (where.consumedAt !== null || otps[i].consumedAt === null)
           ) {
             otps.splice(i, 1);
@@ -79,6 +83,9 @@ vi.mock("../../lib/prisma.js", () => ({
 const sentCodes: { email: string; code: string }[] = [];
 vi.mock("../../lib/mailer.js", () => ({
   sendOtpEmail: vi.fn(async (email: string, code: string) => {
+    sentCodes.push({ email, code });
+  }),
+  sendPasswordResetEmail: vi.fn(async (email: string, code: string) => {
     sentCodes.push({ email, code });
   }),
 }));
@@ -242,5 +249,83 @@ describe("auth — login", () => {
     const res = await request(app).get("/auth/me");
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe("UNAUTHORIZED");
+  });
+});
+
+describe("auth — forgot/reset password", () => {
+  it("emails a reset code for a verified account and resets the password", async () => {
+    await registerVerified("fp@example.com", "supersecret");
+    sentCodes.length = 0;
+
+    const forgot = await request(app)
+      .post("/auth/forgot-password")
+      .send({ email: "fp@example.com" });
+    expect(forgot.status).toBe(202);
+    expect(sentCodes).toHaveLength(1);
+
+    const reset = await request(app)
+      .post("/auth/reset-password")
+      .send({ email: "fp@example.com", code: lastCode(), password: "brandnewpw" });
+    expect(reset.status).toBe(200);
+    expect(reset.body.token).toBeTypeOf("string");
+
+    // Old password no longer works; the new one does.
+    const oldPw = await request(app)
+      .post("/auth/login")
+      .send({ email: "fp@example.com", password: "supersecret" });
+    expect(oldPw.status).toBe(401);
+    const newPw = await request(app)
+      .post("/auth/login")
+      .send({ email: "fp@example.com", password: "brandnewpw" });
+    expect(newPw.status).toBe(200);
+  });
+
+  it("returns 202 without emailing for an unknown address (no enumeration)", async () => {
+    const res = await request(app)
+      .post("/auth/forgot-password")
+      .send({ email: "ghost@example.com" });
+    expect(res.status).toBe(202);
+    expect(sentCodes).toHaveLength(0);
+  });
+
+  it("rejects a wrong reset code, then locks out after too many attempts", async () => {
+    await registerVerified("fp2@example.com", "supersecret");
+    sentCodes.length = 0;
+    await request(app)
+      .post("/auth/forgot-password")
+      .send({ email: "fp2@example.com" });
+    const bad = wrongCode(lastCode());
+
+    for (let i = 0; i < 5; i++) {
+      const res = await request(app)
+        .post("/auth/reset-password")
+        .send({ email: "fp2@example.com", code: bad, password: "brandnewpw" });
+      expect(res.status).toBe(400);
+      expect(res.body.error.message).toBe("Incorrect code");
+    }
+    const lockedOut = await request(app)
+      .post("/auth/reset-password")
+      .send({ email: "fp2@example.com", code: bad, password: "brandnewpw" });
+    expect(lockedOut.body.error.message).toMatch(/too many attempts/i);
+  });
+
+  it("does not re-send a reset code within the cooldown window", async () => {
+    await registerVerified("fp3@example.com", "supersecret");
+    sentCodes.length = 0;
+    await request(app)
+      .post("/auth/forgot-password")
+      .send({ email: "fp3@example.com" });
+    await request(app)
+      .post("/auth/forgot-password")
+      .send({ email: "fp3@example.com" });
+    expect(sentCodes).toHaveLength(1); // second request suppressed by cooldown
+  });
+
+  it("validates a short new password with 400", async () => {
+    const res = await request(app)
+      .post("/auth/reset-password")
+      .send({ email: "fp@example.com", code: "123456", password: "short" });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });
 });

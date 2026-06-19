@@ -137,6 +137,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
           />
         </Field>
 
+        {!isSignup && (
+          <div style={{ textAlign: "right", margin: "-12px 0 22px" }}>
+            <button
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              className="pl-bare"
+              style={{ color: "var(--accent)", fontWeight: 600, fontSize: 13 }}
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
+
         <button
           type="submit"
           className="pl-btn-primary"
