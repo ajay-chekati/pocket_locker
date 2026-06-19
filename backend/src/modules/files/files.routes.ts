@@ -1,19 +1,42 @@
 import { Router } from "express";
-import { createUploadSchema } from "@pocket-locker/shared";
+import {
+  createUploadSchema,
+  listFilesQuerySchema,
+} from "@pocket-locker/shared";
 import { asyncHandler } from "../../lib/asyncHandler.js";
 import { requireAuth } from "../../middleware/requireAuth.js";
-import { createUpload, confirmUpload } from "./files.service.js";
+import {
+  confirmUpload,
+  createUpload,
+  getViewUrl,
+  listFiles,
+} from "./files.service.js";
 
 // Mounted under "/files" (see app.ts). All routes require auth.
 export const filesRouter = Router();
 
 filesRouter.use(requireAuth);
 
+filesRouter.get(
+  "/",
+  asyncHandler(async (req, res) => {
+    const query = listFilesQuerySchema.parse(req.query);
+    res.json(await listFiles(req.user!.id, query));
+  }),
+);
+
 filesRouter.post(
   "/upload-url",
   asyncHandler(async (req, res) => {
     const input = createUploadSchema.parse(req.body);
     res.status(201).json(await createUpload(req.user!.id, input));
+  }),
+);
+
+filesRouter.get(
+  "/:id/view-url",
+  asyncHandler(async (req, res) => {
+    res.json(await getViewUrl(req.user!.id, req.params.id));
   }),
 );
 
