@@ -358,3 +358,37 @@ describe("GET /files/:id/view-url", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("DELETE /files/:id", () => {
+  it("requires auth", async () => {
+    const res = await request(app).delete("/files/a");
+    expect(res.status).toBe(401);
+  });
+
+  it("removes the object and the row for a file the caller owns", async () => {
+    seedFile("a");
+    const res = await request(app)
+      .delete("/files/a")
+      .set("Authorization", auth());
+    expect(res.status).toBe(204);
+    expect(removeObject).toHaveBeenCalledWith("u1/a");
+    expect(files.find((f) => f.id === "a")).toBeUndefined();
+  });
+
+  it("404s for someone else's file (and leaves it intact)", async () => {
+    seedFile("a", { userId: "u2" });
+    const res = await request(app)
+      .delete("/files/a")
+      .set("Authorization", auth());
+    expect(res.status).toBe(404);
+    expect(removeObject).not.toHaveBeenCalled();
+    expect(files.find((f) => f.id === "a")).toBeDefined();
+  });
+
+  it("404s for an unknown file", async () => {
+    const res = await request(app)
+      .delete("/files/nope")
+      .set("Authorization", auth());
+    expect(res.status).toBe(404);
+  });
+});

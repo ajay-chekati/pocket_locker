@@ -1,4 +1,9 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { FileSort } from "@pocket-locker/shared";
 import { filesApi } from "./filesApi.js";
 
@@ -54,5 +59,19 @@ export function useUsage() {
   return useQuery({
     queryKey: ["files", "usage"],
     queryFn: () => filesApi.getUsage(),
+  });
+}
+
+/**
+ * Delete a file, then refresh the list + usage (shared `["files"]` prefix) so
+ * the row disappears and reclaimed storage is reflected.
+ */
+export function useDeleteFile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (fileId: string) => filesApi.remove(fileId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["files"] });
+    },
   });
 }

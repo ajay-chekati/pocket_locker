@@ -8,6 +8,7 @@ import { requireAuth } from "../../middleware/requireAuth.js";
 import {
   confirmUpload,
   createUpload,
+  deleteFile,
   getUsage,
   getViewUrl,
   listFiles,
@@ -52,5 +53,13 @@ filesRouter.post(
   "/:id/confirm",
   asyncHandler(async (req, res) => {
     res.json(await confirmUpload(req.user!.id, req.params.id));
+  }),
+);
+
+filesRouter.delete(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    await deleteFile(req.user!.id, req.params.id);
+    res.status(204).send();
   }),
 );

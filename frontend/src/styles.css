@@ -185,6 +185,29 @@ input::placeholder {
   border-color: var(--accent);
 }
 
+/* Destructive button — solid accent (used to confirm a delete). */
+.pl-btn-danger {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-family: "Manrope", sans-serif;
+  cursor: pointer;
+  transition:
+    filter 0.15s,
+    transform 0.15s;
+}
+.pl-btn-danger:hover {
+  filter: brightness(1.08);
+}
+.pl-btn-danger:active {
+  transform: scale(0.97);
+}
+.pl-btn-danger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* Small square icon button (theme toggle etc.). */
 .pl-icon-btn {
   display: flex;
@@ -264,6 +287,11 @@ input::placeholder {
 }
 .pl-row-action:hover {
   background: var(--bg);
+  color: var(--accent);
+}
+/* Delete affordance inside a row — soft accent wash to read as destructive. */
+.pl-row-danger:hover {
+  background: var(--accent-soft);
   color: var(--accent);
 }
 

@@ -36,7 +36,7 @@ export function LandingPage() {
             </Link>
             <Link
               to="/signup"
-              className="pl-btn-primary"
+              className="pl-btn-primary pl-hidem"
               style={{ height: 40, padding: "0 20px", borderRadius: 10, fontSize: 14, display: "flex", alignItems: "center", textDecoration: "none" }}
             >
               Get started

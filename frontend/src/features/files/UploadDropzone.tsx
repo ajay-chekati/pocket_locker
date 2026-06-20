@@ -1,17 +1,36 @@
-import { useEffect, useRef, useState, type DragEvent } from "react";
-import { acceptAttribute, allowedExtensions, allowedTypesSummary } from "@pocket-locker/shared";
+import { useRef, useState, type DragEvent } from "react";
+import {
+  MAX_UPLOAD_FILES,
+  acceptAttribute,
+  allowedExtensions,
+  allowedTypesSummary,
+} from "@pocket-locker/shared";
 import { Equalizer } from "../../components/Equalizer.js";
 import { UploadIcon } from "../../components/icons.js";
 import { useToast } from "../../components/ToastProvider.js";
-import { useFileUpload } from "./useFileUpload.js";
+import { useFileUpload, type BatchResult } from "./useFileUpload.js";
+
+/** Condense a finished batch into a single toast message. */
+function summarize({ uploaded, errors, truncated }: BatchResult): string | null {
+  const parts: string[] = [];
+  if (uploaded.length === 1) parts.push(`Uploaded ${uploaded[0]}`);
+  else if (uploaded.length > 1) parts.push(`Uploaded ${uploaded.length} files`);
+
+  if (errors.length === 1) parts.push(errors[0]);
+  else if (errors.length > 1) parts.push(`${errors.length} files failed`);
+
+  if (truncated) parts.push(`max ${MAX_UPLOAD_FILES} files at a time`);
+  return parts.length ? parts.join(" · ") : null;
+}
 
 /**
  * Home-page upload target. Idle: a dashed drop zone (drag/drop or click to
- * browse). Active: filename, percent, the equalizer + shimmer bar and a cancel
- * button. Success/error are surfaced as toasts, returning the zone to idle.
+ * browse up to MAX_UPLOAD_FILES files). Active: current filename + batch
+ * position, percent, the equalizer + shimmer bar and a cancel button. The batch
+ * result is surfaced as a single toast, returning the zone to idle.
  */
 export function UploadDropzone() {
-  const { status, progress, etaSeconds, error, fileName, upload, reset, cancel } =
+  const { status, progress, etaSeconds, fileName, index, total, uploadMany, cancel } =
     useFileUpload();
   const { showToast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -19,26 +38,19 @@ export function UploadDropzone() {
 
   const busy = status === "uploading" || status === "finalizing";
 
-  // Report terminal states as toasts, then drop back to the idle zone.
-  useEffect(() => {
-    if (status === "success") {
-      showToast(`Uploaded ${fileName}`);
-      reset();
-    } else if (status === "error") {
-      showToast(error ?? "Upload failed");
-      reset();
-    }
-  }, [status, error, fileName, showToast, reset]);
-
-  const handleFiles = (files: FileList | null) => {
-    const file = files?.[0];
-    if (file && !busy) void upload(file);
+  const handleFiles = async (fileList: FileList | null) => {
+    if (busy) return;
+    const files = fileList ? Array.from(fileList) : [];
+    if (files.length === 0) return;
+    const result = await uploadMany(files);
+    const message = summarize(result);
+    if (message) showToast(message);
   };
 
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
     setDragging(false);
-    handleFiles(e.dataTransfer.files);
+    void handleFiles(e.dataTransfer.files);
   };
 
   return (
@@ -56,7 +68,7 @@ export function UploadDropzone() {
         onClick={() => !busy && inputRef.current?.click()}
         role="button"
         tabIndex={0}
-        aria-label="Upload a file"
+        aria-label="Upload files"
         style={{
           marginTop: 36,
           border: `1.5px dashed ${dragging ? "var(--accent)" : "var(--border)"}`,
@@ -73,6 +85,9 @@ export function UploadDropzone() {
             <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "70%" }}>
                 {fileName}
+                {total > 1 && (
+                  <span style={{ color: "var(--muted)", fontWeight: 600 }}> ({index} of {total})</span>
+                )}
               </span>
               <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)" }}>{progress}%</span>
             </div>
@@ -129,7 +144,7 @@ export function UploadDropzone() {
               or <span style={{ color: "var(--accent)", fontWeight: 700 }}>click to browse</span>
             </div>
             <div style={{ fontSize: 12.5, color: "var(--muted)", letterSpacing: ".02em" }}>
-              Up to 40 MB per file · 100 MB total
+              Up to {MAX_UPLOAD_FILES} files · 40 MB per file · 100 MB total
             </div>
             <div
               title={allowedExtensions.join(", ")}
@@ -140,7 +155,18 @@ export function UploadDropzone() {
           </div>
         )}
       </div>
-      <input ref={inputRef} type="file" accept={acceptAttribute} hidden onChange={(e) => handleFiles(e.target.files)} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept={acceptAttribute}
+        multiple
+        hidden
+        onChange={(e) => {
+          void handleFiles(e.target.files);
+          // Reset so re-selecting the same file(s) fires change again.
+          e.target.value = "";
+        }}
+      />
     </>
   );
 }

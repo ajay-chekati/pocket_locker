@@ -6,6 +6,9 @@ export const GB = 1024 * MB;
 /** Max size of a single uploaded file. */
 export const MAX_FILE_SIZE_BYTES = 40 * MB;
 
+/** Max number of files accepted in a single upload batch. */
+export const MAX_UPLOAD_FILES = 5;
+
 /** Total storage quota per plan. */
 export const PLAN_QUOTAS = {
   free: 100 * MB,
