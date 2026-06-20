@@ -278,6 +278,47 @@ input::placeholder {
   color: var(--text);
 }
 
+/* ---- Monkey mascot ---- */
+/* Hands rest lowered + hidden, then spring up over the eyes for closed/peek. */
+svg.pl-mk .hand {
+  transform: translateY(155px);
+  opacity: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.34, 1.42, 0.38, 1),
+    opacity 0.3s ease;
+}
+svg.pl-mk[data-mk="closed"] .hand,
+svg.pl-mk[data-mk="peek"] .hand {
+  transform: translateY(0);
+  opacity: 1;
+}
+svg.pl-mk .finger {
+  transition: transform 0.42s cubic-bezier(0.34, 1.3, 0.4, 1);
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+svg.pl-mk .pupil {
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/* peek: fingers fan apart to reveal the eyes */
+svg.pl-mk[data-mk="peek"] .f-l0 { transform: translateX(-7px) rotate(-11deg); }
+svg.pl-mk[data-mk="peek"] .f-l1 { transform: translateX(-4px) rotate(-4deg); }
+svg.pl-mk[data-mk="peek"] .f-l2 { transform: translateX(5px) rotate(5deg); }
+svg.pl-mk[data-mk="peek"] .f-l3 { transform: translateX(9px) rotate(11deg); }
+svg.pl-mk[data-mk="peek"] .f-r0 { transform: translateX(-9px) rotate(-11deg); }
+svg.pl-mk[data-mk="peek"] .f-r1 { transform: translateX(-5px) rotate(-5deg); }
+svg.pl-mk[data-mk="peek"] .f-r2 { transform: translateX(4px) rotate(4deg); }
+svg.pl-mk[data-mk="peek"] .f-r3 { transform: translateX(7px) rotate(11deg); }
+
+/* Show/hide toggle inside the password field. */
+.pl-eye-toggle {
+  transition: background 0.15s;
+}
+.pl-eye-toggle:hover {
+  background: var(--surface);
+}
+
 /* ---- Responsive ---- */
 .pl-bn {
   display: none;
@@ -323,5 +364,13 @@ input::placeholder {
 @media (max-width: 540px) {
   .pl-logout-label {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  svg.pl-mk .hand,
+  svg.pl-mk .finger,
+  svg.pl-mk .pupil {
+    transition-duration: 0.01ms;
   }
 }
