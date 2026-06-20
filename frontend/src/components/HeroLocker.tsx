@@ -1,177 +1,230 @@
 /**
- * The hero illustration: a red-framed glass locker cabinet with a 3×3 grid of
- * lit compartments, each holding a file-type glyph, wired together by glowing
- * accent connectors. Pure SVG so it stays crisp, themes itself off the CSS
- * variables, and weighs nothing. Replaces the old "browser window" mock.
+ * The hero illustration: a 3D-tilted glass card mocking the Pocket Locker app —
+ * a titled header with a storage meter, a couple of stored files, and a live
+ * upload in progress, with three small cards floating off the corners for depth.
+ * It floats gently (plHeroFloat) and themes itself off the CSS variables.
  */
 
-const GRID_X = 64;
-const GRID_Y = 54;
-const CELL = 96;
-const GAP = 18;
-
-type IconKind = "pdf" | "image" | "doc" | "code" | "wave" | "key" | "list";
-
-/** Reading order, top-left to bottom-right. */
-const LAYOUT: IconKind[] = ["pdf", "image", "doc", "doc", "code", "wave", "code", "list", "key"];
-
-const cellX = (c: number) => GRID_X + c * (CELL + GAP);
-const cellY = (r: number) => GRID_Y + r * (CELL + GAP);
+const equalizerBars = [0, 0.12, 0.24, 0.36, 0.48];
 
 export function HeroLocker() {
   return (
-    <div className="pl-hidem" style={{ position: "relative", width: "100%" }}>
-      <svg
-        viewBox="0 0 452 432"
-        width="100%"
-        role="img"
-        aria-label="A glass locker cabinet holding your files"
-        style={{ display: "block", filter: "drop-shadow(0 40px 60px var(--shadow))" }}
+    <div
+      className="pl-hero3d"
+      style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 548, perspective: 1700 }}
+    >
+      {/* ambient accent glow */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          width: 360,
+          height: 360,
+          borderRadius: "50%",
+          background: "radial-gradient(circle at 50% 42%,var(--accent-soft),transparent 66%)",
+          pointerEvents: "none",
+        }}
+      />
+      {/* grounding shadow */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          bottom: 60,
+          width: 300,
+          height: 52,
+          borderRadius: "50%",
+          background: "var(--shadow)",
+          filter: "blur(28px)",
+          transform: "scaleX(1.3)",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
+          transformStyle: "preserve-3d",
+          transform: "rotateX(9deg) rotateY(-21deg)",
+          animation: "plHeroFloat 8s ease-in-out infinite",
+        }}
       >
-        <defs>
-          <linearGradient id="plFrame" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="color-mix(in srgb, var(--accent) 78%, #fff)" />
-            <stop offset="0.5" stopColor="var(--accent)" />
-            <stop offset="1" stopColor="color-mix(in srgb, var(--accent) 70%, #000)" />
-          </linearGradient>
-          <linearGradient id="plGlass" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="color-mix(in srgb, var(--text) 8%, transparent)" />
-            <stop offset="1" stopColor="color-mix(in srgb, var(--text) 2%, transparent)" />
-          </linearGradient>
-          <radialGradient id="plAura" cx="0.5" cy="0.45" r="0.6">
-            <stop offset="0" stopColor="var(--accent)" stopOpacity="0.28" />
-            <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
-          </radialGradient>
-          <filter id="plGlow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="2.4" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+        {/* the app card */}
+        <div
+          style={{
+            position: "relative",
+            width: 360,
+            borderRadius: 24,
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
+            boxShadow: "0 50px 92px -32px var(--shadow),0 20px 44px -24px var(--shadow)",
+            overflow: "hidden",
+            transform: "translateZ(0)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "18px 20px", borderBottom: "1px solid var(--border)" }}>
+            <span
+              style={{
+                width: 36,
+                height: 36,
+                flex: "none",
+                borderRadius: 11,
+                background: "var(--accent)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 12px 24px -8px color-mix(in srgb,var(--accent) 55%,transparent)",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                <rect x="5" y="11" width="14" height="9" rx="2" />
+                <path d="M8 11 V8 a4 4 0 0 1 8 0 v3" />
+              </svg>
+            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <span style={{ fontSize: 13.5, fontWeight: 800, letterSpacing: "-.01em" }}>Pocket Locker</span>
+              <span style={{ fontSize: 10.5, color: "var(--muted)", fontFamily: "ui-monospace,monospace" }}>encrypted · synced</span>
+            </div>
+            <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontWeight: 600, color: "var(--text-2)" }}>
+              <span style={{ width: 42, height: 6, borderRadius: 4, background: "var(--border)", overflow: "hidden" }}>
+                <span style={{ display: "block", height: "100%", width: "68%", background: "var(--accent)", borderRadius: 4 }} />
+              </span>
+              68%
+            </span>
+          </div>
 
-        {/* ambient glow behind the cabinet */}
-        <ellipse cx="226" cy="210" rx="232" ry="220" fill="url(#plAura)" />
+          <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 9 }}>
+            <FileRow ext="PDF" name="Q3-Report.pdf" size="4.2 MB" />
+            <FileRow ext="PNG" name="design-mockup.png" size="8.1 MB" />
 
-        {/* cabinet body */}
-        <rect x="40" y="30" width="372" height="372" rx="22" fill="url(#plGlass)" stroke="url(#plFrame)" strokeWidth="6" />
-        {/* top sheen */}
-        <rect x="48" y="38" width="356" height="120" rx="16" fill="color-mix(in srgb, var(--text) 3%, transparent)" />
+            {/* live upload */}
+            <div style={{ marginTop: 5, padding: 14, border: "1.5px dashed var(--accent)", borderRadius: 12, background: "var(--accent-soft)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 11 }}>
+                <span style={{ fontSize: 12, fontWeight: 700 }}>roadmap.key</span>
+                <span style={{ fontSize: 11, color: "var(--text-2)", fontWeight: 600 }}>64% · 12s</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 20, marginBottom: 11 }}>
+                {equalizerBars.map((delay, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      width: 3,
+                      height: 20,
+                      borderRadius: 2,
+                      background: "var(--accent)",
+                      transformOrigin: "bottom",
+                      animation: `plEq 1s ease-in-out ${delay}s infinite`,
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ height: 6, borderRadius: 4, background: "var(--border)", overflow: "hidden" }}>
+                <span
+                  style={{
+                    display: "block",
+                    height: "100%",
+                    width: "64%",
+                    borderRadius: 4,
+                    background: "linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#fff))",
+                    backgroundSize: "200% 100%",
+                    animation: "plShimmer 1.3s linear infinite",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* connectors run behind the panels so they tuck under the glass edges */}
-        <g stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" filter="url(#plGlow)" opacity="0.85">
-          {[0, 1, 2].map((r) =>
-            [0, 1].map((c) => {
-              const y = cellY(r) + CELL / 2;
-              return <line key={`h${r}${c}`} x1={cellX(c) + CELL} y1={y} x2={cellX(c + 1)} y2={y} />;
-            }),
-          )}
-          {[0, 1].map((r) =>
-            [0, 1, 2].map((c) => {
-              const x = cellX(c) + CELL / 2;
-              return <line key={`v${r}${c}`} x1={x} y1={cellY(r) + CELL} x2={x} y2={cellY(r + 1)} />;
-            }),
-          )}
-        </g>
-        {/* connector nodes */}
-        <g fill="var(--accent)" filter="url(#plGlow)">
-          {[0, 1, 2].map((r) =>
-            [0, 1].map((c) => {
-              const y = cellY(r) + CELL / 2;
-              const x = (cellX(c) + CELL + cellX(c + 1)) / 2;
-              return <circle key={`hn${r}${c}`} cx={x} cy={y} r="2.6" />;
-            }),
-          )}
-          {[0, 1].map((r) =>
-            [0, 1, 2].map((c) => {
-              const x = cellX(c) + CELL / 2;
-              const y = (cellY(r) + CELL + cellY(r + 1)) / 2;
-              return <circle key={`vn${r}${c}`} cx={x} cy={y} r="2.6" />;
-            }),
-          )}
-        </g>
+        {/* floating PDF chip, top-left */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: -30,
+            left: -52,
+            width: 74,
+            height: 74,
+            borderRadius: 18,
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
+            boxShadow: "0 28px 46px -22px var(--shadow)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 7,
+            transform: "translateZ(78px)",
+          }}
+        >
+          <span style={{ padding: "3px 7px", borderRadius: 6, background: "var(--accent-soft)", color: "var(--accent)", fontSize: 9.5, fontWeight: 800 }}>
+            PDF
+          </span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" strokeWidth="1.6">
+            <path d="M7 3 h7 l4 4 v14 a1 1 0 0 1-1 1 H7 a1 1 0 0 1-1-1 V4 a1 1 0 0 1 1-1 Z" />
+            <path d="M14 3 v4 h4" />
+          </svg>
+        </div>
 
-        {/* compartments + glyphs */}
-        {LAYOUT.map((kind, i) => {
-          const c = i % 3;
-          const r = Math.floor(i / 3);
-          const x = cellX(c);
-          const y = cellY(r);
-          return (
-            <g key={i}>
-              <rect
-                x={x}
-                y={y}
-                width={CELL}
-                height={CELL}
-                rx="14"
-                fill="url(#plGlass)"
-                stroke="color-mix(in srgb, var(--accent) 30%, transparent)"
-                strokeWidth="1.5"
-              />
-              {/* compartment top highlight */}
-              <rect x={x + 8} y={y + 8} width={CELL - 16} height="26" rx="9" fill="color-mix(in srgb, var(--text) 4%, transparent)" />
-              <Glyph kind={kind} cx={x + CELL / 2} cy={y + CELL / 2} />
-            </g>
-          );
-        })}
-      </svg>
+        {/* floating image chip, bottom-right */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            bottom: -26,
+            right: -40,
+            width: 70,
+            height: 70,
+            borderRadius: 18,
+            background: "var(--bg-elev)",
+            border: "1px solid var(--border)",
+            boxShadow: "0 26px 42px -22px var(--shadow)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transform: "translateZ(54px)",
+          }}
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <circle cx="8.5" cy="10" r="1.6" />
+            <path d="M21 16 l-5-5 -8 8" />
+          </svg>
+        </div>
+
+        {/* floating lock badge, right */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "46%",
+            right: -62,
+            width: 64,
+            height: 64,
+            borderRadius: "50%",
+            background: "var(--accent)",
+            boxShadow: "0 30px 50px -18px color-mix(in srgb,var(--accent) 60%,transparent)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transform: "translateZ(118px)",
+          }}
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+            <rect x="5" y="11" width="14" height="9" rx="2" />
+            <path d="M8 11 V8 a4 4 0 0 1 8 0 v3" />
+          </svg>
+        </div>
+      </div>
     </div>
   );
 }
 
-/** One file-type glyph, drawn centered on (cx, cy) in a ~36px box. */
-function Glyph({ kind, cx, cy }: { kind: IconKind; cx: number; cy: number }) {
-  const stroke = {
-    fill: "none",
-    stroke: "var(--accent)",
-    strokeWidth: 2,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-  };
+/** A single stored-file row inside the mock app card. */
+function FileRow({ ext, name, size }: { ext: string; name: string; size: string }) {
   return (
-    <g transform={`translate(${cx} ${cy})`} filter="url(#plGlow)">
-      {kind === "pdf" && (
-        <>
-          <rect x="-15" y="-11" width="30" height="22" rx="4" {...stroke} />
-          <text x="0" y="4" textAnchor="middle" fontFamily="Manrope, sans-serif" fontSize="9" fontWeight="800" fill="var(--accent)">
-            PDF
-          </text>
-        </>
-      )}
-      {kind === "image" && (
-        <>
-          <rect x="-14" y="-12" width="28" height="24" rx="4" {...stroke} />
-          <circle cx="-5" cy="-4" r="2.6" {...stroke} />
-          <path d="M-14 8 L-3 -2 L4 4 L14 -5" {...stroke} />
-        </>
-      )}
-      {kind === "doc" && (
-        <>
-          <path d="M-11 -14 H5 L11 -8 V14 H-11 Z" {...stroke} />
-          <path d="M5 -14 V-8 H11" {...stroke} />
-          <path d="M-6 -1 H6 M-6 4 H6 M-6 9 H2" {...stroke} />
-        </>
-      )}
-      {kind === "code" && (
-        <>
-          <path d="M-3 -10 L-13 0 L-3 10" {...stroke} />
-          <path d="M3 -10 L13 0 L3 10" {...stroke} />
-        </>
-      )}
-      {kind === "wave" && (
-        <path d="M-12 -3 V3 M-6 -9 V9 M0 -13 V13 M6 -7 V7 M12 -2 V2" {...stroke} />
-      )}
-      {kind === "list" && (
-        <path d="M-11 -8 H11 M-11 0 H11 M-11 8 H4" {...stroke} />
-      )}
-      {kind === "key" && (
-        <>
-          <circle cx="-5" cy="-5" r="6" {...stroke} />
-          <path d="M-1 -1 L11 11 M6 8 L9 5 M11 11 L14 8" {...stroke} />
-        </>
-      )}
-    </g>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 12px", border: "1px solid var(--border)", borderRadius: 11, background: "var(--bg)" }}>
+      <span style={{ padding: "3px 7px", borderRadius: 6, background: "var(--accent-soft)", color: "var(--accent)", fontSize: 10, fontWeight: 700 }}>{ext}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 600 }}>{name}</span>
+      <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }}>{size}</span>
+    </div>
   );
 }
