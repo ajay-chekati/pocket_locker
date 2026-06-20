@@ -79,6 +79,26 @@ export function AccountIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function EyeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M2 12 C4.5 7 8 5 12 5 C16 5 19.5 7 22 12 C19.5 17 16 19 12 19 C8 19 4.5 17 2 12 Z" />
+      <circle cx="12" cy="12" r="3.2" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 5 L20 19" />
+      <path d="M9.6 6 C10.4 5.7 11.2 5.5 12 5.5 C16 5.5 19.5 7.5 22 12 C21.2 13.5 20.3 14.8 19.2 15.8" />
+      <path d="M16.2 16.7 C14.9 17.4 13.5 17.8 12 17.8 C8 17.8 4.5 15.8 2 11.3 C3.1 9.4 4.4 7.9 5.9 6.9" />
+      <path d="M9.9 9.6 A3.2 3.2 0 0 0 14.3 14" />
+    </svg>
+  );
+}
+
 export function PlayIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" {...props}>

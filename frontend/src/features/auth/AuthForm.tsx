@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { EMAIL_NOT_VERIFIED, loginSchema, signupSchema } from "@pocket-locker/shared";
 import { ApiRequestError } from "../../lib/apiClient.js";
 import { Equalizer } from "../../components/Equalizer.js";
+import { MonkeyAvatar, type MonkeyMood } from "../../components/MonkeyAvatar.js";
+import { EyeIcon, EyeOffIcon } from "../../components/icons.js";
 import { useAuth } from "./AuthContext.js";
 
 type Mode = "login" | "signup";
@@ -29,6 +31,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // --- Monkey mascot state ---
+  // Cover the eyes while the password field is focused; peek when it's revealed.
+  const [pwFocused, setPwFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const mood: MonkeyMood = pwFocused ? (showPassword ? "peek" : "closed") : "neutral";
 
   const clearError = (field: keyof FieldErrors) =>
     setErrors((e) => ({ ...e, [field]: undefined }));
@@ -80,6 +89,24 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 124,
+            height: 124,
+            borderRadius: "50%",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            overflow: "hidden",
+          }}
+        >
+          <MonkeyAvatar mood={mood} />
+        </div>
+      </div>
+
       <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-.025em", margin: "0 0 8px" }}>
         {isSignup ? "Create your locker" : "Welcome back"}
       </h1>
@@ -122,19 +149,47 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </Field>
 
         <Field label="Password" error={errors.password} marginBottom={26}>
-          <input
-            aria-label="Password"
-            className={`pl-input${errors.password ? " pl-input-error" : ""}`}
-            style={inputStyle}
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              clearError("password");
-            }}
-            placeholder="••••••••"
-            autoComplete={isSignup ? "new-password" : "current-password"}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              aria-label="Password"
+              className={`pl-input${errors.password ? " pl-input-error" : ""}`}
+              style={passwordInputStyle}
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearError("password");
+              }}
+              onFocus={() => setPwFocused(true)}
+              onBlur={() => setPwFocused(false)}
+              placeholder="••••••••"
+              autoComplete={isSignup ? "new-password" : "current-password"}
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              className="pl-bare pl-eye-toggle"
+              // Keep focus in the password input so the monkey stays covering/peeking.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setShowPassword((v) => !v)}
+              style={{
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: "translateY(-50%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                color: showPassword ? "var(--accent)" : "var(--muted)",
+              }}
+            >
+              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+            </button>
+          </div>
         </Field>
 
         {!isSignup && (
@@ -204,6 +259,9 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 11,
   fontSize: 15,
 };
+
+// Extra right padding so the typed password clears the eye toggle.
+const passwordInputStyle: React.CSSProperties = { ...inputStyle, paddingRight: 48 };
 
 function Field({
   label,
