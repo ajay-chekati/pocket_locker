@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import type { FileDto } from "@pocket-locker/shared";
 import { Modal } from "../../components/Modal.js";
-import { CloseIcon, DownloadIcon } from "../../components/icons.js";
+import { CloseIcon, DownloadIcon, InfoIcon } from "../../components/icons.js";
 import { Equalizer } from "../../components/Equalizer.js";
 import { extOf, formatBytes, formatDate, kindLabel } from "../../lib/format.js";
 import { useViewUrl } from "./useFiles.js";
@@ -24,7 +25,12 @@ export function FilePreview({ file, onClose }: { file: FileDto; onClose: () => v
   const { data, isLoading, isError } = useViewUrl(file.id);
   const download = useDownload();
   const url = data?.url;
-  const fills = FILLS_HEIGHT.has(file.previewKind);
+  // Files with no inline preview always show their details; everything else can
+  // toggle a details panel over the viewer via the info button.
+  const previewable = file.previewKind !== "none";
+  const [showDetails, setShowDetails] = useState(false);
+  const detailsOpen = showDetails || !previewable;
+  const fills = FILLS_HEIGHT.has(file.previewKind) && !detailsOpen;
 
   return (
     <Modal onClose={onClose} maxWidth={880} padding={24} fitHeight={fills} label={`Preview of ${file.name}`}>
@@ -35,15 +41,34 @@ export function FilePreview({ file, onClose }: { file: FileDto; onClose: () => v
         <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {file.name}
         </span>
+        {previewable && (
+          <button
+            type="button"
+            onClick={() => setShowDetails((s) => !s)}
+            aria-label="File details"
+            aria-pressed={showDetails}
+            title="Details"
+            className="pl-modal-close"
+            style={{ ...closeBtnStyle, color: showDetails ? "var(--accent)" : "var(--text-2)", background: showDetails ? "var(--accent-soft)" : "var(--surface)" }}
+          >
+            <InfoIcon />
+          </button>
+        )}
         <button type="button" onClick={onClose} aria-label="Close" className="pl-modal-close" style={closeBtnStyle}>
           <CloseIcon />
         </button>
       </div>
 
       <div style={{ flex: fills ? "1 1 auto" : "none", minHeight: 0, display: "flex", flexDirection: "column" }}>
-        {isLoading && <Centered>Loading preview…</Centered>}
-        {isError && <Centered alert>Couldn't load this file.</Centered>}
-        {url && <PreviewBody file={file} url={url} />}
+        {detailsOpen ? (
+          <FileDetails file={file} note={previewable ? undefined : "No inline preview available for this file type."} />
+        ) : (
+          <>
+            {isLoading && <Centered>Loading preview…</Centered>}
+            {isError && <Centered alert>Couldn't load this file.</Centered>}
+            {url && <PreviewBody file={file} url={url} />}
+          </>
+        )}
       </div>
 
       <div style={{ flex: "none", display: "flex", gap: 10, marginTop: 20 }}>
@@ -115,7 +140,7 @@ function PreviewBody({ file, url }: { file: FileDto; url: string }) {
     case "office":
       return <OfficePreview url={url} mimeType={file.mimeType} />;
     default:
-      return <MetadataFallback file={file} />;
+      return <FileDetails file={file} note="No inline preview available for this file type." />;
   }
 }
 
@@ -185,7 +210,12 @@ function OfficePreview({ url, mimeType }: { url: string; mimeType: string }) {
   );
 }
 
-function MetadataFallback({ file }: { file: FileDto }) {
+/**
+ * Metadata card for a file. Shown for non-previewable types and toggled on
+ * demand (info button) over the viewer for previewable ones. `note` adds a
+ * caption below the table.
+ */
+function FileDetails({ file, note }: { file: FileDto; note?: string }) {
   const rows: Array<[string, string]> = [
     ["Name", file.name],
     ["Type", kindLabel(file.previewKind)],
@@ -213,9 +243,11 @@ function MetadataFallback({ file }: { file: FileDto }) {
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 14, textAlign: "center" }}>
-        No inline preview available for this file type.
-      </div>
+      {note && (
+        <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 14, textAlign: "center" }}>
+          {note}
+        </div>
+      )}
     </>
   );
 }

@@ -62,6 +62,21 @@ URL; the Supabase keys are for the Storage API (signed URLs), not the database.
 | `SUPABASE_BUCKET`      | Storage bucket name (default `files`)                       |
 | `CORS_ORIGIN`          | Allowed frontend origin                                      |
 
+**Email / SMTP** — used to send the signup/reset OTP emails. All optional: leave
+`SMTP_HOST` blank in development and the mailer logs the OTP to the console
+instead of sending it, so the flow is testable without an SMTP server. Set all of
+these in production (e.g. as Cloud Run secrets).
+
+| Var                  | Purpose                                                            |
+| -------------------- | ----------------------------------------------------------------- |
+| `SMTP_HOST`          | SMTP server host (blank → dev mode: OTP printed to the console)   |
+| `SMTP_PORT`          | SMTP port (default `587`)                                          |
+| `SMTP_SECURE`        | `true` for TLS on connect (port 465), else `false` (default)      |
+| `SMTP_USER`          | SMTP username / login                                              |
+| `SMTP_PASS`          | SMTP password or app/API key                                      |
+| `SMTP_FROM`          | From header, e.g. `Pocket Locker <no-reply@pocketlocker.app>`      |
+| `OTP_EXPIRY_MINUTES` | How long an emailed OTP stays valid (default `10`)                 |
+
 **Frontend** — `VITE_API_URL` only (anything Vite reads is shipped to the browser,
 so no secrets here).
 

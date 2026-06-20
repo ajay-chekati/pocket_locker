@@ -19,7 +19,7 @@ export function ProPage() {
   const { user } = useAuth();
   // Pre-fill the signed-in user's email; they can still edit before submitting.
   const [email, setEmail] = useState(user?.email ?? "");
-  const [joined, setJoined] = useState(false);
+  const [joined, setJoined] = useState<"new" | "already" | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // On a direct visit the user may resolve after mount; fill the still-empty
@@ -35,8 +35,8 @@ export function ProPage() {
     }
     setSubmitting(true);
     try {
-      await proApi.joinWaitlist({ email });
-      setJoined(true);
+      const res = await proApi.joinWaitlist({ email });
+      setJoined(res.alreadyJoined ? "already" : "new");
     } catch (err) {
       showToast(
         err instanceof ApiRequestError ? err.error.message : "Something went wrong",
@@ -73,7 +73,9 @@ export function ProPage() {
 
         {joined ? (
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "14px 22px", border: "1px solid var(--accent)", borderRadius: 12, background: "var(--accent-soft)", color: "var(--accent)", fontSize: 14.5, fontWeight: 700 }}>
-            You're on the list — we'll email you.
+            {joined === "already"
+              ? "You're already on the list — we'll email you."
+              : "You're on the list — we'll email you."}
           </div>
         ) : (
           <form

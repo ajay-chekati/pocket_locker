@@ -99,6 +99,28 @@ export function EyeOffIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function TrashIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <path d="M9 6 V4 a1 1 0 0 1 1-1 h4 a1 1 0 0 1 1 1 v2" />
+      <path d="M6 6 v13 a1 1 0 0 0 1 1 h10 a1 1 0 0 0 1-1 V6" />
+      <line x1="10" y1="10" x2="10" y2="16" />
+      <line x1="14" y1="10" x2="14" y2="16" />
+    </svg>
+  );
+}
+
+export function InfoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="11" x2="12" y2="16" />
+      <circle cx="12" cy="7.8" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function PlayIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" {...props}>

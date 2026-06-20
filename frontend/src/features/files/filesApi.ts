@@ -31,6 +31,7 @@ export const filesApi = {
   getViewUrl: (fileId: string) =>
     api<ViewUrlResponse>(`/files/${fileId}/view-url`),
   getUsage: () => api<UsageResponse>("/files/usage"),
+  remove: (fileId: string) => api<void>(`/files/${fileId}`, { method: "DELETE" }),
 };
 
 /**

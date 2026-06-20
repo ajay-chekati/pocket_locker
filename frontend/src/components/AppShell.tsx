@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link to="/login" className="pl-btn-ghost" style={{ height: 38, padding: "0 16px", borderRadius: 10, fontSize: 13.5, display: "flex", alignItems: "center", textDecoration: "none" }}>
                 Log in
               </Link>
-              <Link to="/signup" className="pl-btn-primary" style={{ height: 38, padding: "0 16px", borderRadius: 10, fontSize: 13.5, display: "flex", alignItems: "center", textDecoration: "none" }}>
+              <Link to="/signup" className="pl-btn-primary pl-hidem" style={{ height: 38, padding: "0 16px", borderRadius: 10, fontSize: 13.5, display: "flex", alignItems: "center", textDecoration: "none" }}>
                 Get started
               </Link>
             </>

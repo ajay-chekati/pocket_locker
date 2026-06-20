@@ -243,6 +243,21 @@ export async function listFiles(
   return { items: items.map(toFileDto), nextCursor };
 }
 
+/**
+ * Delete a file the caller owns: remove the stored object first, then the row.
+ * Frees the bytes from the user's quota. Idempotent-ish — a missing file 404s.
+ */
+export async function deleteFile(
+  userId: string,
+  fileId: string,
+): Promise<void> {
+  const file = await prisma.file.findFirst({ where: { id: fileId, userId } });
+  if (!file) throw notFound("File not found");
+
+  await removeObject(file.storagePath);
+  await prisma.file.delete({ where: { id: file.id } });
+}
+
 /** Issue a short-lived signed URL for inline preview of a ready file. */
 export async function getViewUrl(
   userId: string,
