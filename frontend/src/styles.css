@@ -140,6 +140,16 @@ input::placeholder {
     background-position: -200% 0;
   }
 }
+/* Gentle bob for the 3D hero card. */
+@keyframes plHeroFloat {
+  0%,
+  100% {
+    transform: rotateX(9deg) rotateY(-21deg) translateY(0);
+  }
+  50% {
+    transform: rotateX(9deg) rotateY(-24deg) translateY(-16px);
+  }
+}
 
 .pl-anim-up {
   animation: plUp 0.5s ease both;
@@ -387,6 +397,11 @@ svg.pl-mk[data-mk="peek"] .f-r3 { transform: translateX(7px) rotate(11deg); }
     padding: 0 11px !important;
     gap: 0 !important;
   }
+  /* Shrink the 3D hero card so it fits a single-column phone layout. */
+  .pl-hero3d {
+    min-height: 440px !important;
+    transform: scale(0.82);
+  }
 }
 
 @media (max-width: 540px) {
@@ -400,5 +415,9 @@ svg.pl-mk[data-mk="peek"] .f-r3 { transform: translateX(7px) rotate(11deg); }
   svg.pl-mk .finger,
   svg.pl-mk .pupil {
     transition-duration: 0.01ms;
+  }
+  /* Hold the hero card still for motion-sensitive visitors. */
+  .pl-hero3d > * {
+    animation: none !important;
   }
 }
